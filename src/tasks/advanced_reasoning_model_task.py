@@ -37,7 +37,7 @@ class AdvancedReasoningModelTask(BaseTask):
         
         grid_size = self.kwargs.get("grid_size", (3, 4))  # num_rows x num_cols
         max_crops = self.kwargs.get('max_crops', 2)  # TODO: make max crops an LMM decision.
-        top_k = self.kwargs.get("top_k", 1)  # TODO: give user the flexibility if they want to detect one object or multiple
+        top_k = self.kwargs.get("top_k", -1)  # TODO: give user the flexibility if they want to detect one object or multiple
         use_expert: bool = self.kwargs.get("use_expert", True)
         
         origin_coordinates = (0, 0)
@@ -86,6 +86,9 @@ class AdvancedReasoningModelTask(BaseTask):
             return [None] * 3 
 
         # Update cumulative image coordinates
+        # BUG: this is not correct. we need to be able to do proper scaling for the bounding box to work properly.
+        # How to reproduce: The cropped image has a bounding box that spans the entire crop. This will yield in the original 
+        # space to the whole image which doesn't make sense.
         crop_origin = (
             origin_coordinates[0] + cropped_image_data["crop_origin"][0],
             origin_coordinates[1] + cropped_image_data["crop_origin"][1]

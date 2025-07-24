@@ -14,6 +14,7 @@ from utils.io_utils import (convert_list_of_cells_to_list_of_bboxes,
                             get_timestamp)
 
 load_dotenv()
+
 def save_output(
     output_folder_path: str,
     image: Image.Image,
@@ -68,7 +69,7 @@ if __name__ == "__main__":
     object_of_interest = args.object_of_interest
 
     if args.image_path is not None:
-        image = Image.open(args.image_path)
+        image = Image.open(args.image_path).convert("RGB")
     elif args.dataset_path is not None:
         dataset = DetectionDataset(tf=None,
                                    path=args.dataset_path,
