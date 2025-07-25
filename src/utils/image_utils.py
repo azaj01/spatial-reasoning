@@ -71,3 +71,64 @@ def draw_bbox_on_image(image: Image.Image, bbox: list):
     draw = ImageDraw.Draw(annotated_image)
     draw.rectangle([x, y, x + w, y + h], outline=(255, 0, 0), width=10)
     return annotated_image
+
+
+def calculate_iou(bbox1: tuple[int, int, int, int], bbox2: tuple[int, int, int, int]) -> float:
+    """
+    Calculate Intersection over Union (IoU) between two bounding boxes.
+    """
+    x1, y1, w1, h1 = bbox1
+    x2, y2, w2, h2 = bbox2
+
+    # Get bottom-right corners
+    x1_br, y1_br = x1 + w1, y1 + h1
+    x2_br, y2_br = x2 + w2, y2 + h2
+
+    # Compute coordinates of intersection rectangle
+    x_left = max(x1, x2)
+    y_top = max(y1, y2)
+    x_right = min(x1_br, x2_br)
+    y_bottom = min(y1_br, y2_br)
+
+    # No intersection
+    if x_right < x_left or y_bottom < y_top:
+        return 0.0
+
+    intersection = (x_right - x_left) * (y_bottom - y_top)
+    union = w1 * h1 + w2 * h2 - intersection
+    return intersection / union
+
+
+def nms(boxes: list[np.ndarray], scores: list[float], nms_threshold: float) -> dict:
+    """
+    Non-maximum suppression to remove overlapping bounding boxes
+    """
+    # Sort boxes by score in descending order
+    sorted_indices = np.argsort(scores)[::-1]
+    boxes = [boxes[i] for i in sorted_indices]
+    scores = [scores[i] for i in sorted_indices]
+
+    # Apply NMS
+    pruned_boxes = []
+    pruned_scores = []
+    suppressed = [False] * len(boxes)
+
+    for i in range(len(boxes)):
+        if suppressed[i]:
+            continue
+
+        pruned_boxes.append(boxes[i])
+        pruned_scores.append(scores[i])
+
+        # Suppress overlapping boxes with lower scores
+        for j in range(i + 1, len(boxes)):
+            if suppressed[j]:
+                continue
+            iou = calculate_iou(boxes[i], boxes[j])
+            if iou > nms_threshold:
+                suppressed[j] = True  # Suppress the lower-confidence box
+
+    return {
+        "boxes": pruned_boxes,
+        "scores": pruned_scores
+    }
