@@ -21,10 +21,10 @@ Your role is to determine bounding box coordinates (x, y, width, height) for obj
 
 **Confidence Rubric:**
 - **90-100%** - unmistakable match, zero conflicting cues. Tight bounding box, meaning there is very little background.
-- **80-89%** - strong evidence, minor ambiguity in coordinates or the object of interest. Loose bounding box, meaning there is a lot of background present.
-- **70-79%** - clear best choice but partial occlusion
-- **60-69%** - substantial ambiguity; limited cues
-- **< 60%** - highly uncertain or contradictory evidence
+- **85-90%** - strong evidence, minor ambiguity in coordinates or the object of interest. Loose bounding box, meaning there is a lot of background present.
+- **80-85%** - clear best choice but partial occlusion
+- **70-80%** - substantial ambiguity; limited cues
+- **< 70%** - highly uncertain or contradictory evidence
 
 **Analysis Process:**
 Before providing your final answer, conduct a thorough analysis where you:
@@ -85,12 +85,12 @@ You will receive an image with a red grid overlay. The grid cells are numbered w
 3. Each distinct object should be tracked separately.
 4. A single object often spans multiple adjacent cells - include ALL cells it touches.
 
-**Confidence Scoring Guidelines:**
-- **90-100%**: Object is clearly visible and takes up significant space in the cell.
-- **80-89%**: Object is clearly visible but occupies less than half the cell.
-- **70-79%**: Object barely enters the cell (just an edge or corner).
-- **60-69%**: Uncertain due to occlusion, blur, or lighting.
-- **Below 60%**: Very uncertain, minimal evidence.
+**Confidence Rubric:**
+- **90-100%** - unmistakable match, zero conflicting cues. Tight bounding box, meaning there is very little background.
+- **85-90%** - strong evidence, minor ambiguity in coordinates or the object of interest. Loose bounding box, meaning there is a lot of background present.
+- **80-85%** - clear best choice but partial occlusion
+- **70-80%** - substantial ambiguity; limited cues
+- **< 70%** - highly uncertain or contradictory evidence
 
 **Step-by-Step Analysis Process:**
 1. First, identify ALL instances of the target object in the image.
@@ -116,13 +116,13 @@ You will receive an image with a red grid overlay. The grid cells are numbered w
     {
       "object_id": 1,
       "cells": [5, 6, 10, 11],
-      "confidences": [90, 95, 85, 90],
+      "confidences": [90, 95, 82, 94],
       "description": "Large object spanning 4 cells"
     },
     {
       "object_id": 2,
       "cells": [23],
-      "confidences": [100],
+      "confidences": [97],
       "description": "Small object fully contained in one cell"
     }
   ],
@@ -140,7 +140,7 @@ You will receive an image with a red grid overlay. The grid cells are numbered w
 
 Grid Information:
 - Grid dimensions: {grid_size[0]} rows × {grid_size[1]} columns = {grid_size[0] * grid_size[1]} total cells
-- Each cell is approximately {pixels_in_cell[0]:.1f} × {pixels_in_cell[1]:.1f} pixels
+- Each cell is approximately {pixels_in_cell[0]:.1f} x {pixels_in_cell[1]:.1f} pixels
 - Cells are numbered 1 to {grid_size[0] * grid_size[1]} (left to right, top to bottom)
 - Image resolution: {resolution[0]} × {resolution[1]} pixels
 

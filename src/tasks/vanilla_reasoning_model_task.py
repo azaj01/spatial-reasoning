@@ -21,6 +21,7 @@ class VanillaReasoningModelTask(BaseTask):
         """
         image: Image.Image = kwargs['image']
         object_of_interest: str = kwargs['prompt']
+        confidence_threshold: float = kwargs.get("confidence_threshold", 0.65)
 
         messages = [
             self.agent.create_text_message("system", self.prompt.get_system_prompt()),
@@ -29,12 +30,20 @@ class VanillaReasoningModelTask(BaseTask):
         
         raw_response = self.agent.safe_chat(messages)
         structured_response = parse_detection_output(raw_response['output'])
-        
+        print(raw_response)
+        print(structured_response)
         bboxs: list[Cell] = []
+        confidence_scores: list[float] = []
         for i, bbox in enumerate(structured_response['bbox']):
             x, y, w, h = bbox
+            confidence = structured_response['confidence'][i]
             cell = Cell(id=i, left=x, top=y, right=x+w, bottom=y+h)
+            confidence_scores.append(confidence)
             bboxs.append(cell)
+        
+        # Filter out all bboxs that have confidence less than the threshold
+        bboxs = [bbox for bbox, confidence in zip(bboxs, confidence_scores) if confidence >= confidence_threshold]
+        
         
         return {
             "bboxs": bboxs,

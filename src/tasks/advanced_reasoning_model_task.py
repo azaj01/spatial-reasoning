@@ -66,13 +66,14 @@ class AdvancedReasoningModelTask(BaseTask):
         grid_size = self.kwargs.get("grid_size", (3, 4))  # num_rows x num_cols
         max_crops = self.kwargs.get('max_crops', 3)  # TODO: make max crops an LMM decision.
         top_k = self.kwargs.get("top_k", -1)  # TODO: give user the flexibility if they want to detect one object or multiple
+        confidence_threshold = self.kwargs.get("confidence_threshold", 0.65)
         
         origin_coordinates = (0, 0)
         
         overlay_samples = []
         for _ in range(max_crops):
             # TODO: convert this into a streaming application
-            overlay_image, image, origin_coordinates = self.run_single_crop_process(image.copy(), object_of_interest, origin_coordinates, grid_size, top_k)
+            overlay_image, image, origin_coordinates = self.run_single_crop_process(image.copy(), object_of_interest, origin_coordinates, grid_size, top_k, confidence_threshold)
             overlay_samples.append(overlay_image)
             
         kwargs['image'] = image
@@ -89,7 +90,7 @@ class AdvancedReasoningModelTask(BaseTask):
         out['overlay_images'] = overlay_samples
         return out
 
-    def run_single_crop_process(self, image: Image.Image, object_of_interest: str, origin_coordinates: tuple, grid_size: tuple, top_k: int) -> dict:
+    def run_single_crop_process(self, image: Image.Image, object_of_interest: str, origin_coordinates: tuple, grid_size: tuple, top_k: int, confidence_threshold: float) -> dict:
         """
         Run crop process
         """
@@ -111,10 +112,14 @@ class AdvancedReasoningModelTask(BaseTask):
         ]
         raw_response = self.agent.safe_chat(messages)
         structured_response = parse_detection_output(raw_response['output'])
+        
+        print(structured_response)
 
         cropped_image_data: dict = AdvancedReasoningModelTask.crop_image(
-            image, structured_response, cell_lookup, top_k=top_k
+            image, structured_response, cell_lookup, top_k=top_k, confidence_threshold=confidence_threshold
         )
+        print(cropped_image_data)
+
         if not cropped_image_data:
             print(
                 "Unable to get object in the grid, most likely due to it not being found in the image."
@@ -208,7 +213,8 @@ class AdvancedReasoningModelTask(BaseTask):
         scores_grid: dict,
         cell_lookup: dict,
         pad: int = 0,
-        top_k: int = 1
+        top_k: int = 1,
+        confidence_threshold: float = 0.65
     ):
         """
         Crop image using top-k most confident cell groups from `scores_grid`.
@@ -227,6 +233,8 @@ class AdvancedReasoningModelTask(BaseTask):
             key=lambda g: np.mean(g[1]),
             reverse=True
         )
+        # filter out all groups that have confidence less than the threshold
+        grouped = [g for g in grouped if np.mean(g[1]) >= confidence_threshold]
 
         if top_k != -1:
             grouped = grouped[:top_k]

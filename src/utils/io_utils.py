@@ -37,7 +37,7 @@ def parse_detection_output(output_text):
         elif ch == close_ch:
             depth -= 1
             if depth == 0:
-                fragment = cleaned[start : j+1]
+                fragment = cleaned[start: j+1]
                 break
     else:
         return None
@@ -90,6 +90,5 @@ def convert_list_of_cells_to_list_of_bboxes(list_of_cells: list[Cell]) -> list[t
         (cell.left, cell.top, cell.right - cell.left, cell.bottom - cell.top)
         for cell in list_of_cells
     ]
-    
 def get_timestamp():
     return time.strftime("%Y%m%d_%H%M%S")

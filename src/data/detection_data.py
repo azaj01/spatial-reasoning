@@ -24,20 +24,22 @@ class DetectionDataset(BaseDataset):
         labels: Optional[list[str]] = None,
         return_image: bool = False
     ) -> Optional[Image.Image]:
+        """
+        Visualize a list of bounding boxes on an image.
+        """
         # normalize to numpy array
         if isinstance(image, torch.Tensor):
             image = image.permute(1, 2, 0).cpu().numpy()
         elif isinstance(image, Image.Image):
             image = np.array(image)
             
-        # if they just want to get back an image-with-boxes
         if return_image:
             pil = Image.fromarray(image)
             draw = ImageDraw.Draw(pil)
             font = ImageFont.load_default()
             for i, bbox in enumerate(bboxs):
                 x, y, w, h = map(int, bbox)
-                draw.rectangle([x, y, x+w, y+h], outline="red", width=1)
+                draw.rectangle([x, y, x+w, y+h], outline="red", width=5)
                 if labels:
                     draw.text((x, y), str(labels[i]), font=font, fill="white")
             return pil
@@ -47,13 +49,12 @@ class DetectionDataset(BaseDataset):
         ax.imshow(image)
         for i, bbox in enumerate(bboxs):
             x, y, w, h = bbox
-            ax.add_patch(plt.Rectangle((x,y), w, h, fill=False, edgecolor='red', linewidth=1))
+            ax.add_patch(plt.Rectangle((x,y), w, h, fill=False, edgecolor='red', linewidth=5))
             if labels:
                 ax.text(x, y, labels[i], color='white', backgroundcolor='black', fontsize=8)
         ax.axis('off')
         plt.show()
 
-    
     def __getitem__(self, index: int):
         """ Returns image, human-interpretable label, category id, and bounding boxes  """
         labels = [self.category_id_to_name(label['name']) for label in self.ds[self.split][index]['annotations']['category']]
