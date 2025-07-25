@@ -107,8 +107,7 @@ if __name__ == "__main__":
     
     start_time = time.perf_counter()
     output: list[Cell] = task.execute(image=image, prompt=object_of_interest)
-    
-    if isinstance(output['bboxs'][0], Cell):
+    if len(output['bboxs']) > 0 and isinstance(output['bboxs'][0], Cell):
         print(f"Converting {len(output['bboxs'])} cells to bboxes")
         output['bboxs'] = convert_list_of_cells_to_list_of_bboxes(output['bboxs'])
     

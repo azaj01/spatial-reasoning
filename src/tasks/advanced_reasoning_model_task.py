@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from itertools import product
 from typing import Dict, Tuple, Union
 
@@ -25,6 +26,33 @@ class AdvancedReasoningModelTask(BaseTask):
         self.vanilla_agent: VanillaReasoningModelTask = VanillaReasoningModelTask(agent, **kwargs)
         self.vision_agent: VisionModelTask = VisionModelTask(agent, **kwargs)
     
+    def run_agents_parallel(self, **kwargs) -> Tuple[dict, dict]:
+        """
+        Run both vision and vanilla agents in parallel and return both outputs.
+        
+        Returns:
+            tuple: (vision_output, vanilla_output)
+        """
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            # Submit both tasks
+            future_to_agent = {
+                executor.submit(self.vision_agent.execute, **kwargs): 'vision',
+                executor.submit(self.vanilla_agent.execute, **kwargs): 'vanilla'
+            }
+            
+            results = {}
+            # Collect results as they complete
+            for future in as_completed(future_to_agent):
+                agent_type = future_to_agent[future]
+                try:
+                    result = future.result()
+                    results[agent_type] = result
+                except Exception as e:
+                    print(f"Agent {agent_type} generated an exception: {e}")
+                    results[agent_type] = {'error': str(e)}
+            
+        return results.get('vision', {}), results.get('vanilla', {})
+    
     def execute(self, **kwargs) -> dict:
         """
         Run reasoning model
@@ -48,11 +76,15 @@ class AdvancedReasoningModelTask(BaseTask):
             overlay_image, image, origin_coordinates = self.run_single_crop_process(image.copy(), object_of_interest, origin_coordinates, grid_size, top_k)
             overlay_samples.append(overlay_image)
 
-        if use_expert:
-            # NOTE: this will only output one object
-            out = self.vision_agent.execute(**kwargs)
-        else:
-            out = self.vanilla_agent.execute(**kwargs)
+        # Run both agents in parallel
+        vision_out, vanilla_out = self.run_agents_parallel(**kwargs)
+        
+        # Compare outputs - you can customize this comparison logic
+        print(f"Vision agent output: {vision_out}")
+        print(f"Vanilla agent output: {vanilla_out}")
+        
+        # You can modify this to implement your own comparison/selection logic
+        out = vision_out if len(vision_out['bboxs']) > 0 else vanilla_out
 
         out['overlay_images'] = overlay_samples
         return out
@@ -80,10 +112,18 @@ class AdvancedReasoningModelTask(BaseTask):
         raw_response = self.agent.safe_chat(messages)
         structured_response = parse_detection_output(raw_response['output'])
 
-        cropped_image_data: dict = AdvancedReasoningModelTask.crop_image(image, structured_response, cell_lookup, top_k=top_k)
+        cropped_image_data: dict = AdvancedReasoningModelTask.crop_image(
+            image, structured_response, cell_lookup, top_k=top_k
+        )
         if not cropped_image_data:
-            print("Unable to get object in the grid, most likely due to it not being found in the image.")
-            return [None] * 3 
+            print(
+                "Unable to get object in the grid, most likely due to it not being found in the image."
+            )
+            return [
+                None,
+                None,
+                None
+            ] 
 
         # Update cumulative image coordinates
         # BUG: this is not correct. we need to be able to do proper scaling for the bounding box to work properly.
