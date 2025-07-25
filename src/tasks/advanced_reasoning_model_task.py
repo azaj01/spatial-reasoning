@@ -8,7 +8,7 @@ from agents import BaseAgent
 from data import Cell
 from PIL import Image, ImageDraw, ImageFont
 from prompts import GridCellTwoImagesDetectionPrompt
-from utils.io_utils import parse_detection_output
+from utils.io_utils import get_original_bounding_box, parse_detection_output
 
 from .base_task import BaseTask
 from .vanilla_reasoning_model_task import VanillaReasoningModelTask
@@ -64,9 +64,8 @@ class AdvancedReasoningModelTask(BaseTask):
         object_of_interest: str = kwargs['prompt']
         
         grid_size = self.kwargs.get("grid_size", (3, 4))  # num_rows x num_cols
-        max_crops = self.kwargs.get('max_crops', 2)  # TODO: make max crops an LMM decision.
+        max_crops = self.kwargs.get('max_crops', 3)  # TODO: make max crops an LMM decision.
         top_k = self.kwargs.get("top_k", -1)  # TODO: give user the flexibility if they want to detect one object or multiple
-        use_expert: bool = self.kwargs.get("use_expert", True)
         
         origin_coordinates = (0, 0)
         
@@ -75,17 +74,18 @@ class AdvancedReasoningModelTask(BaseTask):
             # TODO: convert this into a streaming application
             overlay_image, image, origin_coordinates = self.run_single_crop_process(image.copy(), object_of_interest, origin_coordinates, grid_size, top_k)
             overlay_samples.append(overlay_image)
-
+            
+        kwargs['image'] = image
         # Run both agents in parallel
         vision_out, vanilla_out = self.run_agents_parallel(**kwargs)
         
-        # Compare outputs - you can customize this comparison logic
-        print(f"Vision agent output: {vision_out}")
-        print(f"Vanilla agent output: {vanilla_out}")
-        
-        # You can modify this to implement your own comparison/selection logic
         out = vision_out if len(vision_out['bboxs']) > 0 else vanilla_out
-
+        # Restore to original coordinates
+        restored_bboxs = get_original_bounding_box(
+            cropped_bounding_boxs=out['bboxs'],
+            crop_origin=origin_coordinates,
+        )
+        out['bboxs'] = restored_bboxs
         out['overlay_images'] = overlay_samples
         return out
 
@@ -94,8 +94,8 @@ class AdvancedReasoningModelTask(BaseTask):
         Run crop process
         """
         overlay_image, cell_lookup = self.overlay_grid_on_image(
-            image, grid_size[0], grid_size[1], font_size=40, width=2
-        )  # TODO: make font size and width function of image size
+            image, grid_size[0], grid_size[1]
+        )
 
         messages = [
             self.agent.create_text_message("system", self.prompt.get_system_prompt()),
@@ -123,22 +123,14 @@ class AdvancedReasoningModelTask(BaseTask):
                 None,
                 None,
                 None
-            ] 
+            ]
 
-        # Update cumulative image coordinates
-        # BUG: this is not correct. we need to be able to do proper scaling for the bounding box to work properly.
-        # How to reproduce: The cropped image has a bounding box that spans the entire crop. This will yield in the original 
-        # space to the whole image which doesn't make sense.
         crop_origin = (
             origin_coordinates[0] + cropped_image_data["crop_origin"][0],
             origin_coordinates[1] + cropped_image_data["crop_origin"][1]
         )
 
-        # Update current image for next iteration
-        cropped_image: Image.Image = cropped_image_data["cropped_image"]
-
-        return overlay_image, cropped_image, crop_origin
-
+        return overlay_image, cropped_image_data["cropped_image"], crop_origin
 
     @staticmethod
     def overlay_grid_on_image(
@@ -146,8 +138,8 @@ class AdvancedReasoningModelTask(BaseTask):
         num_rows: int,
         num_cols: int,
         color: str = "red",
-        font_size: int = 20,
-        width: int = 2,
+        font_size: int = None,
+        width: int = None,
     ) -> Tuple[Union[Image.Image, torch.Tensor], Dict[int, Cell]]:
         """
         Draw a rows x cols grid over `image`, label cells 1..rows*cols, and return:
@@ -167,6 +159,15 @@ class AdvancedReasoningModelTask(BaseTask):
 
         original_image_width, original_image_height = pil.size
         cell_width, cell_height = original_image_width // num_cols, original_image_height // num_rows
+        
+        # Auto-calculate font size and width if not provided
+        if font_size is None:
+            min_cell_dim = min(cell_width, cell_height)
+            font_size = int(min_cell_dim * 0.3)
+            font_size = max(10, min(font_size, 80))  # Clamp between 10 and 80
+        
+        if width is None:
+            width = max(1, font_size // 20)  # Scale line width with font size
 
         draw = ImageDraw.Draw(pil)
         try:

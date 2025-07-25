@@ -50,9 +50,8 @@ def parse_detection_output(output_text):
     return json.loads(json.dumps(obj))
 
 
-
 def get_original_bounding_box(
-    cropped_bounding_box: Cell,
+    cropped_bounding_boxs: list[Cell],
     crop_origin: tuple[int, int],
 ) -> Cell:
     """
@@ -65,22 +64,25 @@ def get_original_bounding_box(
     Returns:
         Bounding box (x, y, w, h) in original image coordinates
     """
-    x = cropped_bounding_box.left
-    y = cropped_bounding_box.top
-    w = cropped_bounding_box.right - cropped_bounding_box.left
-    h = cropped_bounding_box.bottom - cropped_bounding_box.top
-    crop_x, crop_y = crop_origin
+    restored_bboxs = []
+    for cropped_bounding_box in cropped_bounding_boxs:
+        x = cropped_bounding_box.left
+        y = cropped_bounding_box.top
+        w = cropped_bounding_box.right - cropped_bounding_box.left
+        h = cropped_bounding_box.bottom - cropped_bounding_box.top
+        crop_x, crop_y = crop_origin
 
-    x_orig = x + crop_x
-    y_orig = y + crop_y
+        x_orig = x + crop_x
+        y_orig = y + crop_y
 
-    return Cell(
-        id=cropped_bounding_box.id,
-        left=x_orig,
-        top=y_orig,
-        right=x_orig + w,
-        bottom=y_orig + h,
-    )
+        restored_bboxs.append(Cell(
+            id=cropped_bounding_box.id,
+            left=x_orig,
+            top=y_orig,
+            right=x_orig + w,
+            bottom=y_orig + h,
+        ))
+    return restored_bboxs
 
 def convert_list_of_cells_to_list_of_bboxes(list_of_cells: list[Cell]) -> list[tuple[int, int, int, int]]:
     """ Convert list of cells to list of bboxes """
