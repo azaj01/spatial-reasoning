@@ -46,4 +46,4 @@ htmlcov/
 *.log
 
 # Outputs
-output-*/
+output/
