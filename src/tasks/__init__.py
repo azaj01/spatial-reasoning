@@ -1,3 +1,5 @@
+from .advanced_multi_reasoning_model_task import \
+    MultiAdvancedReasoningModelTask
 from .advanced_reasoning_model_task import AdvancedReasoningModelTask
 from .base_task import BaseTask
 from .gemini_task import GeminiTask
@@ -9,5 +11,6 @@ __all__ = [
     "AdvancedReasoningModelTask",
     "GeminiTask",
     "VanillaReasoningModelTask",
-    "VisionModelTask"
+    "VisionModelTask",
+    "MultiAdvancedReasoningModelTask"
 ]

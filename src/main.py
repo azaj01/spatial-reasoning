@@ -9,7 +9,8 @@ from data import Cell, DetectionDataset
 from dotenv import load_dotenv
 from PIL import Image
 from tasks import (AdvancedReasoningModelTask, GeminiTask,
-                   VanillaReasoningModelTask, VisionModelTask)
+                   MultiAdvancedReasoningModelTask, VanillaReasoningModelTask,
+                   VisionModelTask)
 from utils.io_utils import (convert_list_of_cells_to_list_of_bboxes,
                             get_timestamp)
 
@@ -62,7 +63,7 @@ if __name__ == "__main__":
     args.add_argument("--dataset-kwargs", type=dict, required=False, default={})
     
     # Output arguments
-    args.add_argument("--output-folder-path", type=str, required=False, default=f"/home/qasim/code/exp/vision_evals/output-{get_timestamp()}")
+    args.add_argument("--output-folder-path", type=str, required=False, default=f"/home/qasim/code/exp/vision_evals/output/{get_timestamp()}")
 
     args = args.parse_args()
     
@@ -96,6 +97,8 @@ if __name__ == "__main__":
     
     if args.task_type == "advanced_reasoning_model":
         task = AdvancedReasoningModelTask(openai_agent, **args.task_kwargs)
+    elif args.task_type == "multi_advanced_reasoning_model":
+        task = MultiAdvancedReasoningModelTask(openai_agent, **args.task_kwargs)
     elif args.task_type == "gemini":
         task = GeminiTask(gemini_agent)
     elif args.task_type == "vanilla_reasoning_model":
