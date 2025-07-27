@@ -30,8 +30,12 @@ class VanillaReasoningModelTask(BaseTask):
         
         raw_response = self.agent.safe_chat(messages)
         structured_response = parse_detection_output(raw_response['output'])
-        print(raw_response)
-        print(structured_response)
+        if not structured_response or "bbox" not in structured_response:
+            return {
+                "bboxs": [],
+                "overlay_images": []
+            }
+        
         bboxs: list[Cell] = []
         confidence_scores: list[float] = []
         for i, bbox in enumerate(structured_response['bbox']):

@@ -21,10 +21,10 @@ Your role is to determine bounding box coordinates (x, y, width, height) for obj
 
 **Confidence Rubric:**
 - **90-100%** - unmistakable match, zero conflicting cues. Tight bounding box, meaning there is very little background.
-- **85-90%** - strong evidence, minor ambiguity in coordinates or the object of interest. Loose bounding box, meaning there is a lot of background present.
-- **80-85%** - clear best choice but partial occlusion
-- **70-80%** - substantial ambiguity; limited cues
-- **< 70%** - highly uncertain or contradictory evidence
+- **80-90%** - strong evidence, minor ambiguity in coordinates or the object of interest. Loose bounding box, meaning there is a lot of background present.
+- **70-80%** - clear best choice but partial occlusion
+- **60-70%** - substantial ambiguity; limited cues
+- **< 60%** - highly uncertain or contradictory evidence
 
 **Analysis Process:**
 Before providing your final answer, conduct a thorough analysis where you:
@@ -40,7 +40,7 @@ Along with your reasoning, provide your final answer as a JSON object with the f
   "confidence": [score1, score2, ...],
   "bbox": [(x1, y1, w1, h1), (x2, y2, w2, h2), ...]
 }
-
+x
 If multiple instances of the target object exist, provide coordinates for all detected instances.
 """
     
@@ -167,7 +167,114 @@ Output your analysis followed by the JSON format shown in the system prompt."""
         }
 
 
-class GridCellTwoImagesDetectionPrompt(BasePrompt):
+class MultiObjectGridCellTwoImagesDetectionPrompt(BasePrompt):
+    """Prompt template for detecting objects in grid cells using two images."""
+    
+    def __init__(self):
+        super().__init__(
+            name="grid_cell_detection",
+            description="Detect which grid cells contain the target object with confidence scores"
+        )
+
+    def get_system_prompt(self, **kwargs) -> str:
+        """Get the system prompt for grid cell detection."""
+        return """You are a visual detection expert. You'll receive two images:
+1. Original image (no overlay)
+2. Same image with numbered grid overlay (ignore red lines/numbers - they're not objects)
+
+**Your Task:** Find ALL instances of the target object and decide if you need zoom for better precision.
+
+**Key Principle: Small objects need magnification**
+
+For each object found:
+- **ZOOM**: Object is small relative to grid cells OR you need better resolution to see details
+- **FOUND**: Object is large and boundaries are crystal clear
+
+**Decision Rules:**
+- Object smaller than 50% of a cell → ZOOM
+- Object details are hard to see → ZOOM
+- Multiple small objects clustered → ZOOM
+- Any uncertainty about precise location → ZOOM
+- Object is large with clear boundaries → FOUND
+
+**Important for tiny objects:**
+- Even a single-pixel target counts - mark for ZOOM
+- Include areas with slight anomalies that might be the target
+- Better to zoom unnecessarily than miss small instances
+
+**Confidence = How likely this cell contains the target object (0-100)**
+- Include even moderate confidence (60%+) for small objects
+
+Output example:
+{
+  "detections": [
+    {
+      "action": "ZOOM",
+      "cells": [15],
+      "confidence": [65],
+      "reason": "Small object needs magnification"
+    },
+    {
+      "action": "FOUND",
+      "cells": [4, 5, 8, 9],
+      "confidence": [85, 90, 88, 85]
+    }
+  ]
+}"""
+
+    def get_user_prompt(self, **kwargs) -> str:
+        """Get the user prompt for grid cell detection."""
+        resolution = kwargs.get('resolution')
+        object_of_interest = kwargs.get('object_of_interest')
+        grid_size = kwargs.get('grid_size')  # (num_rows, num_cols)
+        pixels_in_cell = resolution[0] / grid_size[1], resolution[1] / grid_size[0]
+        current_depth = kwargs.get('depth', 0)
+        
+        zoom_context = ""
+        if current_depth > 0:
+            zoom_context = f"\nNOTE: This is zoom level {current_depth}. Be more precise. If NO {object_of_interest} found, return empty array."
+        
+        return f"""I'm providing two images of the same scene:
+    1. Original image (no overlay)
+    2. Same image with {grid_size[0]}×{grid_size[1]} numbered grid
+
+    Grid details:
+    - Cells: {grid_size[0] * grid_size[1]} total (numbered 1-{grid_size[0] * grid_size[1]})
+    - Each cell: {pixels_in_cell[0]:.0f}×{pixels_in_cell[1]:.0f} pixels
+    - Image: {resolution[0]}×{resolution[1]} pixels{zoom_context}
+
+    Find ALL instances of: {object_of_interest}
+
+    For each one found:
+    - FOUND: If it's clear and occupies substantial space (>30% of its cells)
+    - ZOOM: If it's too small or unclear to locate precisely
+
+    Examples:
+
+    No objects:
+    {{"detections": []}}
+
+    Objects found:
+    {{
+      "detections": [
+        {{"action": "FOUND", "cells": [4, 5, 7, 8], "confidence": [85, 90, 88, 92]}},
+        {{"action": "ZOOM", "cells": [1, 2], "confidence": [70, 72], "reason": "Too small"}}
+      ]
+    }}
+
+    Remember: Empty array if no {object_of_interest} found."""
+
+    def get_required_parameters(self) -> Dict[str, str]:
+        """Get required parameters for this prompt."""
+        return {
+            "image": "PIL image with grid overlay to analyze",
+            "object_of_interest": "object to detect in the grid cells",
+            "grid_size": "tuple of (num_rows, num_cols) for the grid",
+            "resolution": "tuple of (width, height) in pixels",
+            "depth": "current zoom depth (0 for original image)"
+        }
+
+class SingleObjectGridCellTwoImagesDetectionPrompt(BasePrompt):
     """Prompt template for detecting objects in grid cells using two images."""
     
     def __init__(self):
@@ -275,8 +382,6 @@ This means:
             "object_of_interest": "object to detect in the grid cells",
             "grid_factor": "size of each grid cell in pixels (default: 50)"
         }
-
-
 class GeminiPrompt(BasePrompt):
     """Prompt template for detecting prominent objects with normalized bounding boxes using Gemini."""
     

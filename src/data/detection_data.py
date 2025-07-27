@@ -49,7 +49,7 @@ class DetectionDataset(BaseDataset):
         ax.imshow(image)
         for i, bbox in enumerate(bboxs):
             x, y, w, h = bbox
-            ax.add_patch(plt.Rectangle((x,y), w, h, fill=False, edgecolor='red', linewidth=5))
+            ax.add_patch(plt.Rectangle((x,y), w, h, fill=False, edgecolor='red', linewidth=1))
             if labels:
                 ax.text(x, y, labels[i], color='white', backgroundcolor='black', fontsize=8)
         ax.axis('off')

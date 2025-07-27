@@ -1,6 +1,7 @@
 from .base_prompt import BasePrompt
 from .detection_prompts import (GeminiPrompt, GridCellDetectionPrompt,
-                                GridCellTwoImagesDetectionPrompt,
-                                SimpleDetectionPrompt)
+                                MultiObjectGridCellTwoImagesDetectionPrompt,
+                                SimpleDetectionPrompt,
+                                SingleObjectGridCellTwoImagesDetectionPrompt)
 
-__all__ = ["BasePrompt", "SimpleDetectionPrompt", "GridCellDetectionPrompt", "GridCellTwoImagesDetectionPrompt", "GeminiPrompt"]
+__all__ = ["BasePrompt", "SimpleDetectionPrompt", "GridCellDetectionPrompt", "SingleObjectGridCellTwoImagesDetectionPrompt", "MultiObjectGridCellTwoImagesDetectionPrompt", "GeminiPrompt"]

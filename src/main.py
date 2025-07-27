@@ -72,7 +72,7 @@ if __name__ == "__main__":
     if args.image_path is not None:
         image = Image.open(args.image_path).convert("RGB")
     elif args.dataset_path is not None:
-        dataset = DetectionDataset(tf=None,
+        dataset = DetectionDataset(transform=None,
                                    path=args.dataset_path,
                                    split=args.dataset_split,
                                    visualize=args.dataset_visualize,

@@ -7,7 +7,7 @@ import torch
 from agents import BaseAgent
 from data import Cell
 from PIL import Image, ImageDraw, ImageFont
-from prompts import GridCellTwoImagesDetectionPrompt
+from prompts import SingleObjectGridCellTwoImagesDetectionPrompt
 from utils.io_utils import get_original_bounding_box, parse_detection_output
 
 from .base_task import BaseTask
@@ -21,7 +21,7 @@ class AdvancedReasoningModelTask(BaseTask):
     """
     def __init__(self, agent: BaseAgent, **kwargs):
         super().__init__(agent, **kwargs)
-        self.prompt: GridCellTwoImagesDetectionPrompt = GridCellTwoImagesDetectionPrompt()
+        self.prompt: SingleObjectGridCellTwoImagesDetectionPrompt = SingleObjectGridCellTwoImagesDetectionPrompt()
         # Tool use -and- foundation model agents
         self.vanilla_agent: VanillaReasoningModelTask = VanillaReasoningModelTask(agent, **kwargs)
         self.vision_agent: VisionModelTask = VisionModelTask(agent, **kwargs)
@@ -112,8 +112,6 @@ class AdvancedReasoningModelTask(BaseTask):
         ]
         raw_response = self.agent.safe_chat(messages)
         structured_response = parse_detection_output(raw_response['output'])
-        
-        print(structured_response)
 
         cropped_image_data: dict = AdvancedReasoningModelTask.crop_image(
             image, structured_response, cell_lookup, top_k=top_k, confidence_threshold=confidence_threshold
@@ -213,7 +211,7 @@ class AdvancedReasoningModelTask(BaseTask):
         scores_grid: dict,
         cell_lookup: dict,
         pad: int = 0,
-        top_k: int = 1,
+        top_k: int = -1,
         confidence_threshold: float = 0.65
     ):
         """

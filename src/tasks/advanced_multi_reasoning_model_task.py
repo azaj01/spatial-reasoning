@@ -1,12 +1,13 @@
-from collections import defaultdict, deque
+from collections import deque
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
 import numpy as np
 from agents import BaseAgent
 from PIL import Image
-from prompts import GridCellTwoImagesDetectionPrompt
+from prompts import MultiObjectGridCellTwoImagesDetectionPrompt
 from utils.io_utils import get_original_bounding_box, parse_detection_output
 
 from .advanced_reasoning_model_task import AdvancedReasoningModelTask
@@ -32,10 +33,12 @@ class MultiAdvancedReasoningModelTask(BaseTask):
     """
     def __init__(self, agent: BaseAgent, **kwargs):
         super().__init__(agent, **kwargs)
-        self.prompt: GridCellTwoImagesDetectionPrompt = GridCellTwoImagesDetectionPrompt()
+        self.prompt: MultiObjectGridCellTwoImagesDetectionPrompt = MultiObjectGridCellTwoImagesDetectionPrompt()
         # Tool use -and- foundation model agents
         self.vanilla_agent: VanillaReasoningModelTask = VanillaReasoningModelTask(agent, **kwargs)
-        self.vision_agent: VisionModelTask = VisionModelTask(agent, **kwargs)
+        vision_agent = deepcopy(agent)
+        vision_agent.model = "o4-mini"
+        self.vision_agent: VisionModelTask = VisionModelTask(vision_agent, **kwargs)
     
     def run_agents_parallel(self, **kwargs) -> Tuple[dict, dict]:
         """
@@ -75,10 +78,10 @@ class MultiAdvancedReasoningModelTask(BaseTask):
         object_of_interest: str = kwargs['prompt']
         
         grid_size = self.kwargs.get("grid_size", (3, 4))  # num_rows x num_cols
-        max_crops = self.kwargs.get('max_crops', 3)  # TODO: make max crops an LMM decision.
+        max_crops = self.kwargs.get('max_crops', 3)
+        print(max_crops)
         top_k = self.kwargs.get("top_k", -1)  # TODO: give user the flexibility if they want to detect one object or multiple
-        confidence_threshold = self.kwargs.get("confidence_threshold", 0.65)
-        convergence_threshold = self.kwargs.get("convergence_threshold", 0.5)
+        confidence_threshold = self.kwargs.get("confidence_threshold", 0.7)
         
         results = self.bfs(
             image,
@@ -86,21 +89,59 @@ class MultiAdvancedReasoningModelTask(BaseTask):
             grid_size,
             top_k,
             confidence_threshold,
-            convergence_threshold,
             max_crops,
         )
         
+        # Create mappings
+        all_nodes_in_results = {id(r['node']) for r in results}
         node_to_result = {id(r['node']): r for r in results}
-        
-        final_bboxs = []
-        final_overlay_images = []
-        
-        final_nodes_data = []
-        # TODO: add the final bboxs and overlay images
-        return {
-            "bboxs": final_bboxs,
-            "overlay_images": final_overlay_images
-        }
+
+        # Collect leaf nodes with their parent result info
+        final_crops_data = []
+
+        for r in results:
+            # Case 1: Children that are NOT in results (terminal FOUND)
+            for child in r['children']:
+                if id(child) not in all_nodes_in_results:
+                    final_crops_data.append({
+                        'crop_image': child.image,
+                        'crop_coordinates': child.coordinates,
+                        'depth': child.depth,
+                        'overlay_image': r['overlay'],  # Parent's overlay showing where this crop came from
+                    })
+
+            # Case 2: Node with no children (max_depth or no detections)
+            if not r['children']:
+                # For leaf nodes, we need their parent's overlay
+                parent_overlay = None
+                if r['node'].parent:
+                    parent_result = node_to_result.get(id(r['node'].parent))
+                    if parent_result:
+                        parent_overlay = parent_result['overlay']
+
+                final_crops_data.append({
+                    'crop_image': r['node'].image,
+                    'crop_coordinates': r['node'].coordinates,
+                    'depth': r['node'].depth,
+                    'overlay_image': parent_overlay,  # Parent's overlay (None for root)
+                })
+
+        # Run through the vision encoder
+        final_data = {"bboxs": [], "overlay_images": []}
+        for item in final_crops_data:
+            vision_out, vanilla_out = self.run_agents_parallel(image=item['crop_image'], prompt=object_of_interest)
+
+            out = vision_out if len(vision_out['bboxs']) > 0 else vanilla_out
+            
+            # Restore to original coordinates
+            restored_bboxs = get_original_bounding_box(
+                cropped_bounding_boxs=out['bboxs'],
+                crop_origin=item['crop_coordinates'],
+            )
+            final_data["bboxs"].append(restored_bboxs)
+            final_data["overlay_images"].append(item['overlay_image'])
+
+        return final_data
 
     def bfs(
         self,
@@ -109,7 +150,6 @@ class MultiAdvancedReasoningModelTask(BaseTask):
         grid_size: Tuple[int, int],
         top_k: int,
         confidence_threshold: float,
-        convergence_threshold: float,
         max_crops: int
     ):
 
@@ -136,8 +176,7 @@ class MultiAdvancedReasoningModelTask(BaseTask):
                 node.coordinates,
                 grid_size,
                 top_k,
-                confidence_threshold,
-                convergence_threshold
+                confidence_threshold
             )
             
             # Create child nodes
@@ -161,23 +200,13 @@ class MultiAdvancedReasoningModelTask(BaseTask):
                 'node': node,
                 'children': children,
                 'overlay': out['overlay_image'],
-                'is_terminal': out.get('is_terminal', False),
                 'reason': out.get('reason', '')
             })
         
         return results
 
-    @staticmethod
-    def is_terminal_state(cell_group: list[int], grid_size: tuple, convergence_threshold: float) -> bool:
-        """
-        Convergence is defined as the ratio of the number of cells in the cell group
-        to the total number of cells in the grid. If the ratio is greater than or
-        equal to the convergence threshold, then the cell group is a terminal state.
-        """
-        total_cells = grid_size[0] * grid_size[1]
-        return len(cell_group) >= total_cells * convergence_threshold
 
-    def run_single_crop_process(self, image: Image.Image, object_of_interest: str, origin_coordinates: tuple, grid_size: tuple, top_k: int, confidence_threshold: float, convergence_threshold: float):
+    def run_single_crop_process(self, image: Image.Image, object_of_interest: str, origin_coordinates: tuple, grid_size: tuple, top_k: int, confidence_threshold: float):
         """
         Run crop process
         """
@@ -197,139 +226,151 @@ class MultiAdvancedReasoningModelTask(BaseTask):
                 [image, overlay_image]
             )
         ]
-        raw_response = self.agent.safe_chat(messages)
+        raw_response = self.agent.safe_chat(messages, reasoning={'effort' : 'medium', 'summary' : 'detailed'})
+        # raw_response = self.agent.safe_chat(messages)
+        print(raw_response)
+        
         structured_response = parse_detection_output(raw_response['output'])
         
-        
-        # Add logging
-        print("*"*100)
-        print("Grouped cells:")
-        print(structured_response['cells'])
-        print("-" * 100)
-        print("Grouped confidence:")
-        print(structured_response['confidence'])
-        print("*"*100)
-        # Check convergence for each group
-        total_cells = grid_size[0] * grid_size[1]
-        threshold_cells = total_cells * convergence_threshold
-        
-        # Get crops for ALL groups
-        list_of_cropped_image_data: list[dict] = MultiAdvancedReasoningModelTask.crop_image(
-            image, 
-            structured_response,
-            cell_lookup, 
-            top_k=top_k, 
-            confidence_threshold=confidence_threshold
-        )
-        
-        if not list_of_cropped_image_data:
-            print("Unable to get object in the grid, most likely due to it not being found in the image.")
+        if not structured_response['detections']:
             return {
                 "overlay_image": overlay_image,
                 "list_of_crop_image_data": [],
                 "list_of_crop_origin_coordinates": [],
-                "is_terminal": True,
+                "list_of_is_terminal": [],
                 "reason": "no objects found"
             }
-
-        # Process all crops but mark which ones are terminal
+            
+        # Get crops for ALL detections (both FOUND and ZOOM)
+        all_crops = MultiAdvancedReasoningModelTask.crop_image(
+            image,
+            structured_response['detections'],
+            cell_lookup,
+            action_filter=None,  # Process both FOUND and ZOOM
+            top_k=top_k,
+            confidence_threshold=confidence_threshold
+        )
+        
+        print("**" * 100)
+        print(all_crops)
+        print("**" * 100)
+        
+        # Process crops
         list_of_crop_origin_coordinates = []
         list_of_crop_image_data = []
-        list_of_is_terminal = []  # Track which crops are terminal
+        list_of_is_terminal = []
         
-        for i, (group, crop_image_data) in enumerate(zip(structured_response, list_of_cropped_image_data)):
+        for crop_data in all_crops:
             crop_origin = (
-                origin_coordinates[0] + crop_image_data["crop_origin"][0],
-                origin_coordinates[1] + crop_image_data["crop_origin"][1]
+                origin_coordinates[0] + crop_data["crop_origin"][0],
+                origin_coordinates[1] + crop_data["crop_origin"][1]
             )
-            list_of_crop_image_data.append(crop_image_data["cropped_image"])
+            list_of_crop_image_data.append(crop_data["cropped_image"])
             list_of_crop_origin_coordinates.append(crop_origin)
             
-            # Check if this specific group has converged
-            is_converged = len(group) >= threshold_cells
-            list_of_is_terminal.append(is_converged)
-            
-            if is_converged:
-                print(f"Group {i} has converged ({len(group)}/{total_cells} cells = {len(group)/total_cells:.1%})")
-
+            # FOUND = terminal, ZOOM = not terminal
+            is_terminal = (crop_data["action"] == "FOUND")
+            list_of_is_terminal.append(is_terminal)
+        
         return {
             "overlay_image": overlay_image,
             "list_of_crop_image_data": list_of_crop_image_data,
             "list_of_crop_origin_coordinates": list_of_crop_origin_coordinates,
-            "list_of_is_terminal": list_of_is_terminal,  # NEW: terminal status per crop
-            "is_terminal": False,  # The overall process continues
-            "reason": f"found {len(list_of_crop_image_data)} crops"
+            "list_of_is_terminal": list_of_is_terminal,
+            "reason": f"found {len(structured_response['detections'])} detections",
+            "all_detections": structured_response['detections']
         }
 
     @staticmethod
     def crop_image(
         pil_image: Image.Image,
-        scores_grid: dict,
+        detections: list[dict],
         cell_lookup: dict,
-        pad: int = 0,
-        top_k: int = 1,
-        confidence_threshold: float = 0.65
+        pad: int = 50,
+        top_k: int = -1,
+        confidence_threshold: float = 0.65,
+        action_filter: str = None  # 'FOUND', 'ZOOM', or None for both
     ) -> list[dict]:
         """
-        Crop image using top-k most confident cell groups from `scores_grid`.
-        scores_grid = {
-            "confidence": [(65, 65), (75, 62)],
-            "cells": [(3, 6), (5, 6)]
-        }
-        Note: this function returns just one cropped image, not a list of cropped images. TODO: add support for multiple crops.
+        Crop image using detections from the new format.
+        detections = [
+            {
+                "action": "FOUND",
+                "cells": [14, 15, 24, 25],
+                "confidence": [85, 90, 88, 92]
+            },
+            {
+                "action": "ZOOM",
+                "cells": [31, 32, 41, 42],
+                "confidence": [75, 70, 72, 68],
+                "reason": "Multiple small objects clustered together"
+            }
+        ]
         """
         # Basic error checking
-        if not scores_grid or not scores_grid.get("cells") or not scores_grid.get("confidence"):
-            return None
+        if not detections:
+            return []
         
-        grouped = sorted(
-            zip(scores_grid["cells"], scores_grid["confidence"]),
-            key=lambda g: np.mean(g[1]),
-            reverse=True
-        )
-        # filter out all groups that have confidence less than the threshold
-        grouped = [g for g in grouped if np.mean(g[1]) >= confidence_threshold]
-
+        # Filter by action if specified
+        if action_filter:
+            detections = [d for d in detections if d.get("action") == action_filter]
+        
+        # Convert to (cells, confidence, action) tuples and sort by mean confidence
+        processed_detections = []
+        for det in detections:
+            cells = det.get("cells", [])
+            confidence = det.get("confidence", [])
+            action = det.get("action", "UNKNOWN")
+            
+            if cells and confidence and len(cells) == len(confidence):
+                mean_conf = np.mean(confidence)
+                if mean_conf >= confidence_threshold:
+                    processed_detections.append((cells, confidence, action, det))
+        
+        # Sort by mean confidence
+        processed_detections.sort(key=lambda x: np.mean(x[1]), reverse=True)
+        
+        # Apply top_k if specified
         if top_k != -1:
-            grouped = grouped[:top_k]
-
-        # Each cell group will be transformed into a crop.
-        # This enables us to detect multiple objects in the image
-        # without the model having to infer everything from a zoomed out view.
+            processed_detections = processed_detections[:top_k]
+        
+        # Create crops
         crops = []
-        for group_idx, (cell_ids, confidences) in enumerate(grouped):
+        for group_idx, (cell_ids, confidences, action, original_det) in enumerate(processed_detections):
             bounds = []
             for cid in cell_ids:
                 c = cell_lookup[cid]
                 l, r = sorted([c.left, c.right])
                 t, b = sorted([c.top, c.bottom])
                 bounds.append((l, t, r, b))
-
+            
             if not bounds:
                 continue
-
+            
             ls, ts, rs, bs = zip(*bounds)
             crop_box = (
                 max(0, min(ls) - pad),
                 max(0, min(ts) - pad),
-                min(pil_image.width,  max(rs) + pad),
+                min(pil_image.width, max(rs) + pad),
                 min(pil_image.height, max(bs) + pad)
             )
-
+            
             if crop_box[2] <= crop_box[0] or crop_box[3] <= crop_box[1]:
                 print(f"Warning: Bad crop box for group {group_idx}: {crop_box}")
                 continue
-
+            
             cropped = pil_image.crop(crop_box)
-
+            
             crops.append({
                 "original_dims": pil_image.size,
-                "new_dims":      (crop_box[2] - crop_box[0], crop_box[3] - crop_box[1]),
-                "crop_box":      crop_box,
-                "crop_origin":   (crop_box[0], crop_box[1]),
+                "new_dims": (crop_box[2] - crop_box[0], crop_box[3] - crop_box[1]),
+                "crop_box": crop_box,
+                "crop_origin": (crop_box[0], crop_box[1]),
                 "cropped_image": cropped,
-                "cells": cell_ids,  # Track which cells this crop came from
-                "confidence": np.mean(confidences)
+                "cells": cell_ids,
+                "confidence": np.mean(confidences),
+                "action": action,  # Track whether this was FOUND or ZOOM
+                "reason": original_det.get("reason", None)  # For ZOOM actions
             })
         
         return crops
