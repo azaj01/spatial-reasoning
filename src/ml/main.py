@@ -12,7 +12,7 @@ from tasks import (AdvancedReasoningModelTask, GeminiTask,
                    MultiAdvancedReasoningModelTask, VanillaReasoningModelTask,
                    VisionModelTask)
 from utils.io_utils import (convert_list_of_cells_to_list_of_bboxes,
-                            get_timestamp)
+                            download_image, get_timestamp)
 
 load_dotenv()
 
@@ -53,15 +53,15 @@ if __name__ == "__main__":
     args.add_argument("--object-of-interest", type=str, required=True)
     # Task type
     args.add_argument("--task-type", type=str, required=False, default="advanced_reasoning_model")
-    args.add_argument("--task-kwargs", type=dict, required=False, default={})
-    args.add_argument("--multiple-predictions", type=bool, required=False, default=False)
+    args.add_argument('--task-kwargs', type=lambda x: json.loads(x), help='Task kwargs as JSON')
+
 
     # Dataset arguments
     args.add_argument("--dataset-path", type=str, required=False)
     args.add_argument("--dataset-split", type=str, required=False, default="validation")  # assumes dataset is a huggingface dataset
     args.add_argument("--dataset-visualize", type=bool, required=False, default=False)
     args.add_argument("--trust-remote-code", type=bool, required=False, default=True)
-    args.add_argument("--dataset-kwargs", type=dict, required=False, default={})
+    args.add_argument("--dataset-kwargs", type=lambda x: json.loads(x), help='Dataset kwargs as JSON')
     
     # Output arguments
     args.add_argument("--output-folder-path", type=str, required=False, default=f"/home/qasim/code/exp/vision_evals/output/{get_timestamp()}")
@@ -71,7 +71,10 @@ if __name__ == "__main__":
     object_of_interest = args.object_of_interest
 
     if args.image_path is not None:
-        image = Image.open(args.image_path).convert("RGB")
+        if args.image_path.startswith("http"):
+            image: Image.Image = download_image(args.image_path)
+        else:
+            image = Image.open(args.image_path).convert("RGB")
     elif args.dataset_path is not None:
         dataset = DetectionDataset(transform=None,
                                    path=args.dataset_path,
@@ -97,9 +100,9 @@ if __name__ == "__main__":
     gemini_agent = AgentFactory.create_agent(model="gemini-2.5-flash", platform_name="gemini")
     
     if args.task_type == "advanced_reasoning_model":
-        task = AdvancedReasoningModelTask(openai_agent, **args.task_kwargs)
+        task = AdvancedReasoningModelTask(openai_agent)
     elif args.task_type == "multi_advanced_reasoning_model":
-        task = MultiAdvancedReasoningModelTask(openai_agent, **args.task_kwargs)
+        task = MultiAdvancedReasoningModelTask(openai_agent)
         raise NotImplementedError("Multi advanced reasoning model task is not fully implemented yet")
     elif args.task_type == "gemini":
         task = GeminiTask(gemini_agent)
@@ -111,7 +114,7 @@ if __name__ == "__main__":
         raise ValueError(f"Task type {args.task_type} not supported")
     
     start_time = time.perf_counter()
-    output: list[Cell] = task.execute(image=image, prompt=object_of_interest)
+    output: list[Cell] = task.execute(image=image, prompt=object_of_interest, **args.task_kwargs)
     if len(output['bboxs']) > 0 and isinstance(output['bboxs'][0], Cell):
         print(f"Converting {len(output['bboxs'])} cells to bboxes")
         output['bboxs'] = convert_list_of_cells_to_list_of_bboxes(output['bboxs'])
@@ -128,4 +131,4 @@ if __name__ == "__main__":
 # Example usage:
 # Option 1. Supply your own image: python main.py --image-path /path/to/image.jpg --object-of-interest "object of interest"
 # Option 2. Supply a dataset:python main.py --dataset-path /path/to/dataset.json --object-of-interest "object of interest" --dataset-split "train" --dataset-visualize True --dataset-trust-remote-code True --dataset-kwargs '{"task": "coco", "year": "2017"}'
-# python main.py --image-path /home/data/unitx/images/1645672134274-IR5J98FHAW.png --object-of-interest "defect chip. could be golden in color, like a tintish look. or just anything that looks hella abnormal" --multiple-predictions True
+# python main.py --image-path /home/data/unitx/images/1645672134274-IR5J98FHAW.png --object-of-interest "defect chip. could be golden in color, like a tintish look. or just anything that looks hella abnormal" --task-kwargs '{"nms_threshold": 0.7, "multiple_predictions": True}'

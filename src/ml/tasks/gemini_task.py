@@ -1,7 +1,7 @@
-import random
 from typing import List
 
 from agents import BaseAgent
+from data import Cell
 from PIL import Image
 from prompts import GeminiPrompt
 from utils.io_utils import parse_detection_output
@@ -48,9 +48,8 @@ class GeminiTask(BaseTask):
                 "overlay_images": [None] * len(bounding_boxes)
             }
         else:
-            random_index = random.randint(0, len(bounding_boxes) - 1)
             return {
-                "bboxs": [bounding_boxes[random_index]],
+                "bboxs": [bounding_boxes[0]],
                 "overlay_images": [None]
             }
 
@@ -59,16 +58,17 @@ class GeminiTask(BaseTask):
         responses: list,
         image: Image.Image,
         normalization_factor: float
-    ) -> List[List[int]]:
+    ) -> List[Cell]:
         """Convert normalized bounding boxes to absolute coordinates."""
         width, height = image.size
         converted_bounding_boxes = []
-        for response in responses:
+        for i, response in enumerate(responses):
             box = response["box_2d"]
             abs_y1 = int(box[0] / normalization_factor * height)
             abs_x1 = int(box[1] / normalization_factor * width)
             abs_y2 = int(box[2] / normalization_factor * height)
             abs_x2 = int(box[3] / normalization_factor * width)
-            converted_bounding_boxes.append([abs_x1, abs_y1, abs_x2, abs_y2])
-        
+            cell = Cell(id=i, left=abs_x1, top=abs_y1, right=abs_x2, bottom=abs_y2)
+            converted_bounding_boxes.append(cell)
+
         return converted_bounding_boxes

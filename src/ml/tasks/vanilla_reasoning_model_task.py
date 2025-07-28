@@ -4,7 +4,6 @@ from agents import BaseAgent
 from data import Cell
 from PIL import Image
 from prompts import SimpleDetectionPrompt
-from utils.image_utils import nms
 from utils.io_utils import parse_detection_output
 
 from .base_task import BaseTask
@@ -32,8 +31,16 @@ class VanillaReasoningModelTask(BaseTask):
             self.agent.create_multimodal_message("user", self.prompt.get_user_prompt(resolution=image.size, object_of_interest=object_of_interest), [image])
         ]
         
-        raw_response = self.agent.safe_chat(messages)
+        raw_response = self.agent.safe_chat(messages, reasoning={"effort": "medium", "summary": "auto"})
         structured_response = parse_detection_output(raw_response['output'])
+
+        # TODO: remove this. Keep only for debugging purposes.
+        if "reasoning" in raw_response:
+            for reasoning in raw_response["reasoning"]:
+                print(reasoning.text)
+        print("--------------------------------")
+        print(raw_response["output"])
+        
         if not structured_response or "bbox" not in structured_response:
             return {
                 "bboxs": [],
@@ -49,18 +56,18 @@ class VanillaReasoningModelTask(BaseTask):
             confidence_scores.append(confidence)
             bboxs.append(cell)
         
-        # Filter out all bboxs that have confidence less than the threshold
-        filtered_results = nms(bboxs, confidence_scores, confidence_threshold)
-        bboxs = filtered_results['boxes']
-        
+        # Filter out all bboxs that have confidence less than the threshold. utilize confidence from bboxs and confidence_scores
+        filtered_bboxs = [(box, confidence) for box, confidence in zip(bboxs, confidence_scores) if confidence >= confidence_threshold]
+        filtered_bboxs.sort(key=lambda x: x[1], reverse=True)
+        filtered_bboxs = [box for box, _ in filtered_bboxs]
+
         if multiple_predictions:
             return {
-                "bboxs": bboxs,
-                "overlay_images": [None] * len(bboxs)
+                "bboxs": filtered_bboxs,
+                "overlay_images": [None] * len(filtered_bboxs)
             }
         else:
-            random_index = random.randint(0, len(bboxs) - 1)
             return {
-                "bboxs": [bboxs[random_index]],
+                "bboxs": [filtered_bboxs[0]],
                 "overlay_images": [None]
             }

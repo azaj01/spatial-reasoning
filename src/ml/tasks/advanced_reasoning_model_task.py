@@ -67,9 +67,9 @@ class AdvancedReasoningModelTask(BaseTask):
         grid_size = self.kwargs.get("grid_size", (4, 3))  # num_rows x num_cols
         max_crops = self.kwargs.get('max_crops', 4)
         if image.width < 2048 and image.height < 2048:
-            max_crops = 2
+            max_crops = 3
         top_k = self.kwargs.get("top_k", -1)  # TODO: give user the flexibility if they want to detect one object or multiple
-        confidence_threshold = self.kwargs.get("confidence_threshold", 0.65)
+        confidence_threshold = self.kwargs.get("confidence_threshold", 0.5)
         convergence_threshold = self.kwargs.get("convergence_threshold", 0.5)
         
         origin_coordinates = (0, 0)
@@ -78,19 +78,27 @@ class AdvancedReasoningModelTask(BaseTask):
         is_terminal_state = False
         while not is_terminal_state and len(overlay_samples) < max_crops:
             # TODO: convert this into a streaming application
-            if image.width < 1024 or image.height < 1024:
+            if image.width < 1024 and image.height < 1024:
                 _grid_size = (2, 2)
             else:
                 _grid_size = grid_size
             overlay_image, image, origin_coordinates, is_terminal_state = self.run_single_crop_process(image.copy(), object_of_interest, origin_coordinates, _grid_size, top_k, confidence_threshold, convergence_threshold)
             
             overlay_samples.append(overlay_image)
+            # Now, if the model doesn't think it can find the object in the image, we should probably just return the original image
+            if is_terminal_state and not image:
+                return {
+                    'bboxs': [],
+                    'overlay_images': overlay_samples,
+                    'crop_origin': origin_coordinates
+                }
             
         kwargs['image'] = image
         # Run both agents in parallel
         vision_out, vanilla_out = self.run_agents_parallel(**kwargs)
         
-        out = vision_out if len(vision_out['bboxs']) > 0 else vanilla_out
+        # output from vision agent is preferred if the number of predictions matches between the two agents
+        out = vision_out if len(vision_out['bboxs']) == len(vanilla_out['bboxs']) else vanilla_out
         # out = vanilla_out
         # Restore to original coordinates
         restored_bboxs = get_original_bounding_box(
@@ -125,18 +133,21 @@ class AdvancedReasoningModelTask(BaseTask):
                 resolution=image.size,
                 object_of_interest=object_of_interest,
                 grid_size=grid_size,
-                confidence_threshold=confidence_threshold
+                confidence_threshold=confidence_threshold,
+                cell_lookup=cell_lookup
             )),
             self.agent.create_multimodal_message(
                 "user",
                 self.prompt.get_user_prompt(
                     resolution=image.size,
                     object_of_interest=object_of_interest,
-                    grid_size=grid_size
+                    grid_size=grid_size,
+                    cell_lookup=cell_lookup
                 ),
                 [overlay_image]
             )
         ]
+
         raw_response = self.agent.safe_chat(messages, reasoning={'effort' : 'medium', 'summary' : 'detailed'})
         structured_response = parse_detection_output(raw_response['output'])
 
@@ -157,7 +168,7 @@ class AdvancedReasoningModelTask(BaseTask):
             )
             return [
                 overlay_image,
-                image,
+                None,
                 origin_coordinates,
                 True
             ]
@@ -244,7 +255,7 @@ class AdvancedReasoningModelTask(BaseTask):
         pil_image: Image.Image,
         scores_grid: dict,
         cell_lookup: dict,
-        pad: int = 100,
+        pad: int = 50,
         top_k: int = -1,
         confidence_threshold: float = 0.65
     ):

@@ -2,8 +2,19 @@ import ast
 import json
 import re
 import time
+from io import BytesIO
 
+import requests
 from data import Cell
+from PIL import Image
+
+
+def download_image(url: str) -> Image.Image:
+    """Download an image from a url and return a PIL Image (RGB)"""
+    assert url.startswith("http"), "URL must start with http"
+    response = requests.get(url)
+    response.raise_for_status()
+    return Image.open(BytesIO(response.content))
 
 
 def parse_detection_output(output_text):
