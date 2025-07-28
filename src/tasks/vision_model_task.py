@@ -29,7 +29,11 @@ class VisionModelTask(BaseTask):
         
         return_sam_masks = kwargs.get("return_sam_masks", False)
 
-        bbox_detections = self.detect_grounding_dino(kwargs["image"], kwargs["prompt"], kwargs.get("nms_threshold", 0.8))
+        bbox_detections = self.detect_grounding_dino(
+            kwargs["image"], 
+            kwargs["prompt"], 
+            kwargs.get("nms_threshold", 0.7),
+            kwargs.get("multiple_boxes", False)) # TODO: expose this to the user
         
         if bbox_detections is None:
             return {'bboxs': [], 'overlay_images': []}
@@ -58,6 +62,7 @@ class VisionModelTask(BaseTask):
         image: Image.Image,
         prompt: str,
         nms_threshold: float,
+        multiple_boxes: bool
     ) -> Cell:
         # Step 1: Use Grounding DINO to get bounding box from text
         inputs = self.processor(images=image, text=prompt, return_tensors="pt")
@@ -74,33 +79,42 @@ class VisionModelTask(BaseTask):
         )[0]
         
         if len(results["boxes"]) == 0:
-            print(f"No objects found for prompt: {prompt}")
-            # inputs = self.processor(images=image, text=prompt, return_tensors="pt")
-            # with torch.no_grad():
-            #     outputs = self.model(**inputs)
-            # results = self.processor.post_process_grounded_object_detection(
-            #     outputs,
-            #     inputs.input_ids,
-            #     box_threshold=0.2,
-            #     text_threshold=0.25,
-            #     target_sizes=[(image.height, image.width)]
-            # )[0]
-            # if len(results["boxes"]) == 0:
-            return []
+            print(f"No objects found for prompt: {prompt}. Trying again with lower threshold.")
+            inputs = self.processor(images=image, text=prompt, return_tensors="pt")
+            with torch.no_grad():
+                outputs = self.model(**inputs)
+            results = self.processor.post_process_grounded_object_detection(
+                outputs,
+                inputs.input_ids,
+                box_threshold=0.1,
+                text_threshold=0.25,
+                target_sizes=[(image.height, image.width)]
+            )[0]
+            if len(results["boxes"]) == 0:
+                return []
 
         # Get the best box (highest score)
         detections = []
 
         # ADD NMS thresholding to minimize false positive
         filtered_results = nms(results['boxes'].cpu().numpy(), results['scores'].cpu().numpy(), nms_threshold)
-
-        for idx, box in enumerate(filtered_results['boxes']):
+        if multiple_boxes:
+            for idx, box in enumerate(filtered_results['boxes']):
+                detections.append(Cell(
+                    id=idx + 1,
+                    left=int(box[0]),
+                    top=int(box[1]),
+                    right=int(box[2]),
+                    bottom=int(box[3])
+                ))
+        else:
+            best_box = filtered_results['boxes'][np.argmax(filtered_results['scores'])]
             detections.append(Cell(
-                id=idx + 1,
-                left=int(box[0]),
-                top=int(box[1]),
-                right=int(box[2]),
-                bottom=int(box[3])
+                id=1,
+                left=int(best_box[0]),
+                top=int(best_box[1]),
+                right=int(best_box[2]),
+                bottom=int(best_box[3])
             ))
 
         return detections

@@ -1,5 +1,5 @@
 # Prompt
-from typing import Dict
+from typing import Any, Dict, Tuple
 
 from .base_prompt import BasePrompt
 
@@ -61,208 +61,125 @@ Provide your analysis and then output the results in JSON format:
             "image": "PIL image to analyze",
             "object of interest": "object to detect in the image"
         }
-        
-        
-class GridCellDetectionPrompt(BasePrompt):
-    """Improved prompt template for detecting objects in grid cells."""
-
-    def __init__(self):
-        super().__init__(
-            name="grid_cell_detection_v2",
-            description="Detect which grid cells contain the target object with confidence scores"
-        )
-
-    def get_system_prompt(self, **kwargs) -> str:
-        """Get the system prompt for grid cell detection."""
-        return """You are an expert computer vision specialist analyzing images with grid overlays for object detection.
-
-**Your Task:**
-You will receive an image with a red grid overlay. The grid cells are numbered with red text (1, 2, 3... from left to right, top to bottom). Your job is to identify which cells contain the target object.
-
-**Critical Instructions:**
-1. IGNORE the red grid lines and red numbers - these are NOT objects, they are part of the grid overlay.
-2. Look ONLY for the actual objects behind/under the grid.
-3. Each distinct object should be tracked separately.
-4. A single object often spans multiple adjacent cells - include ALL cells it touches.
-
-**Confidence Rubric:**
-- **90-100%** - unmistakable match, zero conflicting cues. Tight bounding box, meaning there is very little background.
-- **85-90%** - strong evidence, minor ambiguity in coordinates or the object of interest. Loose bounding box, meaning there is a lot of background present.
-- **80-85%** - clear best choice but partial occlusion
-- **70-80%** - substantial ambiguity; limited cues
-- **< 70%** - highly uncertain or contradictory evidence
-
-**Step-by-Step Analysis Process:**
-1. First, identify ALL instances of the target object in the image.
-2. For EACH object instance:
-   - Track which cells it occupies (even partially).
-   - Assign confidence based on how much of the object is in each cell.
-   - Group these cells together as they belong to the same object.
-3. Work systematically: Start from cell 1 and proceed in order.
-
-**Output Rules:**
-- Each object gets its own entry in the detections list.
-- Cells within each detection should be in ascending order.
-- If an object spans cells [5, 6, 10, 11], list all four cells for that one object.
-
-**Example Output Format:**
-{
-  "grid_info": {
-    "rows": 5,
-    "cols": 10,
-    "total_cells": 50
-  },
-  "detections": [
-    {
-      "object_id": 1,
-      "cells": [5, 6, 10, 11],
-      "confidences": [90, 95, 82, 94],
-      "description": "Large object spanning 4 cells"
-    },
-    {
-      "object_id": 2,
-      "cells": [23],
-      "confidences": [97],
-      "description": "Small object fully contained in one cell"
-    }
-  ],
-  "total_objects_found": 2
-}"""
-
-    def get_user_prompt(self, **kwargs) -> str:
-        """Get the user prompt for grid cell detection."""
-        resolution = kwargs.get('resolution', (1024, 1024))
-        object_of_interest = kwargs.get('object_of_interest', 'object')
-        grid_size = kwargs.get('grid_size', (10, 10))  # (rows, cols)
-        pixels_in_cell = (resolution[1] / grid_size[0], resolution[0] / grid_size[1])
-
-        return f"""Analyze this image with a red grid overlay to find all instances of: {object_of_interest}
-
-Grid Information:
-- Grid dimensions: {grid_size[0]} rows × {grid_size[1]} columns = {grid_size[0] * grid_size[1]} total cells
-- Each cell is approximately {pixels_in_cell[0]:.1f} x {pixels_in_cell[1]:.1f} pixels
-- Cells are numbered 1 to {grid_size[0] * grid_size[1]} (left to right, top to bottom)
-- Image resolution: {resolution[0]} × {resolution[1]} pixels
-
-IMPORTANT REMINDERS:
-1. The red grid lines and red numbers are NOT objects – ignore them.
-2. Look for actual {object_of_interest}(s) visible through/behind the grid.
-3. If you see multiple {object_of_interest}s, report each one separately.
-4. If one {object_of_interest} spans multiple cells, list ALL cells it touches.
-
-Please:
-1. Count how many distinct {object_of_interest}s you can see.
-2. For each {object_of_interest}, identify ALL cells it occupies (even partially).
-3. Provide confidence scores for each cell based on how much of the object is present.
-
-Output your analysis followed by the JSON format shown in the system prompt."""
-
-    def get_required_parameters(self) -> Dict[str, str]:
-        """Get required parameters for this prompt."""
-        return {
-            "image": "PIL image with grid overlay to analyze",
-            "object_of_interest": "object to detect in the grid cells",
-            "resolution": "image resolution as (width, height) tuple",
-            "grid_size": "grid dimensions as (rows, cols) tuple"
-        }
 
 
-class MultiObjectGridCellTwoImagesDetectionPrompt(BasePrompt):
-    """Prompt template for detecting objects in grid cells using two images."""
+class SimplifiedGridCellDetectionPrompt(BasePrompt):
+    """Simplified prompt for detecting all cells containing the target object."""
     
     def __init__(self):
         super().__init__(
-            name="grid_cell_detection",
-            description="Detect which grid cells contain the target object with confidence scores"
+            name="simplified_grid_detection",
+            description="Detect all grid cells containing any part of the target object"
         )
 
     def get_system_prompt(self, **kwargs) -> str:
-        """Get the system prompt for grid cell detection."""
-        return """You are a visual detection expert. You'll receive two images:
-1. Original image (no overlay)
-2. Same image with numbered grid overlay (ignore red lines/numbers - they're not objects)
+        """Get the system prompt for simplified grid cell detection."""
+        return f"""You are an expert visual analyst specializing in precise object detection.
 
-**Your Task:** Find ALL instances of the target object and decide if you need zoom for better precision.
+**Your Task:**
+You will receive TWO images:
+1. First image: Original image showing the target object(s)
+2. Second image: SAME image with red grid overlay and numbered cells
 
-**Key Principle: Small objects need magnification**
+**Objective:** Find EVERY cell that contains ANY part of the target object.
 
-For each object found:
-- **ZOOM**: Object is small relative to grid cells OR you need better resolution to see details
-- **FOUND**: Object is large and boundaries are crystal clear
+**IMPORTANT: Grid Layout Specification**
+- Grid cells are numbered **left to right, top to bottom**
+- The grid is defined as **{kwargs['grid_size'][0]} rows x {kwargs['grid_size'][1]} columns**
+- Numbering works like this (example for a 4x3 grid):
+    - Row 1 → cells 1, 2, 3
+    - Row 2 → cells 4, 5, 6
+    - Row 3 → cells 7, 8, 9
+    - Row 4 → cells 10, 11, 12
 
-**Decision Rules:**
-- Object smaller than 50% of a cell → ZOOM
-- Object details are hard to see → ZOOM
-- Multiple small objects clustered → ZOOM
-- Any uncertainty about precise location → ZOOM
-- Object is large with clear boundaries → FOUND
+**Critical Instructions:**
+- The red grid lines and red numbers are ONLY for reference - ignore them as objects
+- A cell should be included if even the SMALLEST part of the object touches it
+- Check every cell systematically from 1 to the maximum number
+- Include cells even if you only see a tiny edge, shadow, or partial view
 
-**Important for tiny objects:**
-- Even a single-pixel target counts - mark for ZOOM
-- Include areas with slight anomalies that might be the target
-- Better to zoom unnecessarily than miss small instances
+**Analysis Process:**
+1. Study the first image to understand what the target object looks like
+2. In the second image, scan each numbered cell methodically
+3. Mark ANY cell where you see ANY part of the object
 
-**Confidence = How likely this cell contains the target object (0-100)**
-- Include even moderate confidence (60%+) for small objects
+**Confidence Scoring:**
+- 90-100: Object clearly visible and fills significant portion of cell
+- 70-89: Object partially visible or fills moderate portion of cell
+- 50-69: Small part of object visible (edge, corner, shadow)
+- 30-49: Very uncertain but possible presence
+- Below 30: Do not include
 
-Output example:
-{
-  "detections": [
-    {
-      "action": "ZOOM",
-      "cells": [15],
-      "confidence": [65],
-      "reason": "Small object needs magnification"
-    },
-    {
-      "action": "FOUND",
-      "cells": [4, 5, 8, 9],
-      "confidence": [85, 90, 88, 85]
-    }
-  ]
-}"""
+**Important Reminders:**
+- Include EVERY cell with ANY part of the object
+- When in doubt, include the cell with lower confidence
+- Better to include borderline cells than miss them
+- Tiny objects still count - even if just a few pixels
+
+**How to Avoid Mistakes:**
+- DO NOT assume the grid has 3 rows x 4 columns — this is a common error.
+- ALWAYS use the grid layout provided above to determine which cells the object touches.
+- Double-check your cell mappings by verifying the object's position against the correct row/column structure.
+
+
+**Output Format:**
+{{
+  "cells": [list of ALL cell numbers containing any part of the object],
+  "confidence": [corresponding confidence score for each cell]
+}}
+
+Example: If object appears in cells 5, 6, 10, 11, 15:
+{{
+  "cells": [5, 6, 10, 11, 15],
+  "confidence": [85, 90, 88, 92, 70]
+}}"""
 
     def get_user_prompt(self, **kwargs) -> str:
-        """Get the user prompt for grid cell detection."""
+        """Get the user prompt for simplified detection."""
         resolution = kwargs.get('resolution')
         object_of_interest = kwargs.get('object_of_interest')
         grid_size = kwargs.get('grid_size')  # (num_rows, num_cols)
-        pixels_in_cell = resolution[0] / grid_size[1], resolution[1] / grid_size[0]
-        current_depth = kwargs.get('depth', 0)
-        
-        zoom_context = ""
-        if current_depth > 0:
-            zoom_context = f"\nNOTE: This is zoom level {current_depth}. Be more precise. If NO {object_of_interest} found, return empty array."
-        
-        return f"""I'm providing two images of the same scene:
-    1. Original image (no overlay)
-    2. Same image with {grid_size[0]}×{grid_size[1]} numbered grid
+        total_cells = grid_size[0] * grid_size[1]
+        pixels_per_cell = (resolution[0] / grid_size[1], resolution[1] / grid_size[0])
 
-    Grid details:
-    - Cells: {grid_size[0] * grid_size[1]} total (numbered 1-{grid_size[0] * grid_size[1]})
-    - Each cell: {pixels_in_cell[0]:.0f}×{pixels_in_cell[1]:.0f} pixels
-    - Image: {resolution[0]}×{resolution[1]} pixels{zoom_context}
+        return f"""I need you to find ALL cells containing "{object_of_interest}".
 
-    Find ALL instances of: {object_of_interest}
+**Image Information:**
+- Image 1: Original image without overlay
+- Image 2: Same image with {grid_size[0]}x{grid_size[1]} red grid (cells numbered 1-{total_cells})
+- Resolution: {resolution[0]}x{resolution[1]} pixels
+- Cell size: ~{pixels_per_cell[0]:.0f}×{pixels_per_cell[1]:.0f} pixels each
 
-    For each one found:
-    - FOUND: If it's clear and occupies substantial space (>30% of its cells)
-    - ZOOM: If it's too small or unclear to locate precisely
+**Your Task:**
+Find EVERY cell where ANY part of "{object_of_interest}" appears.
 
-    Examples:
+**Key Points:**
+- Include cells with even tiny portions of {object_of_interest}
+- Red grid/numbers are NOT objects - they're just reference markers
+- Check all {total_cells} cells systematically
+- A {object_of_interest} spanning multiple cells should have ALL those cells listed
+- Grid numbering flows left to right, top to bottom:
+  - Row 1 → cells 1 to {grid_size[1]}
+  - Row 2 → cells {grid_size[1]+1} to {2*grid_size[1]}
+  - ...
+  - Row {grid_size[0]} → cells {total_cells - grid_size[1] + 1} to {total_cells}
 
-    No objects:
-    {{"detections": []}}
+**Output Format:**
+{{
+  "cells": [list of cell numbers],
+  "confidence": [corresponding confidence scores]
+}}
 
-    Objects found:
-    {{
-      "detections": [
-        {{"action": "FOUND", "cells": [4, 5, 7, 8], "confidence": [85, 90, 88, 92]}},
-        {{"action": "ZOOM", "cells": [1, 2], "confidence": [70, 72], "reason": "Too small"}}
-      ]
-    }}
+The "cells" and "confidence" lists must be the same length, and in the same order.
 
-    Remember: Empty array if no {object_of_interest} found."""
+Example:
+{{
+  "cells": [3, 7, 8],
+  "confidence": [95, 82, 87]
+}}
+
+**Remember:** If a single {object_of_interest} covers cells 14, 15, 24, 25 — include ALL four.
+Only include cells where you see the {object_of_interest}, and report a confidence score for each one."""
 
     def get_required_parameters(self) -> Dict[str, str]:
         """Get required parameters for this prompt."""
@@ -270,9 +187,9 @@ Output example:
             "image": "PIL image with grid overlay to analyze",
             "object_of_interest": "object to detect in the grid cells",
             "grid_size": "tuple of (num_rows, num_cols) for the grid",
-            "resolution": "tuple of (width, height) in pixels",
-            "depth": "current zoom depth (0 for original image)"
+            "resolution": "tuple of (width, height) in pixels"
         }
+
 
 class SingleObjectGridCellTwoImagesDetectionPrompt(BasePrompt):
     """Prompt template for detecting objects in grid cells using two images."""
@@ -393,33 +310,7 @@ class GeminiPrompt(BasePrompt):
     
     def get_system_prompt(self, **kwargs) -> str:
         """Get the system prompt for Gemini object detection."""
-        return f"""You are an expert computer vision model specialized in object detection and spatial localization.
-
-**Your Task:**
-Analyze the provided image and detect ALL prominent items/objects visible in the scene.
-
-**Detection Criteria:**
-- Identify objects that are clearly visible and well-defined
-- Focus on distinct, recognizable items rather than background elements
-- Include both large prominent objects and smaller but clearly identifiable items
-- Avoid detecting abstract concepts, textures, or overly generic regions
-
-**Bounding Box Format:**
-For each detected object, provide a bounding box in the format [ymin, xmin, ymax, xmax]:
-- All coordinates must be normalized to a 0-{kwargs['normalization_factor']} scale
-- ymin: Top edge of the bounding box (0 = top of image, {kwargs['normalization_factor']} = bottom)
-- xmin: Left edge of the bounding box (0 = left of image, {kwargs['normalization_factor']} = right)  
-- ymax: Bottom edge of the bounding box (0 = top of image, {kwargs['normalization_factor']} = bottom)
-- xmax: Right edge of the bounding box (0 = left of image, {kwargs['normalization_factor']} = right)
-
-**Quality Standards:**
-- Bounding boxes should tightly fit around the object
-- Ensure ymin < ymax and xmin < xmax for all boxes
-- Be precise with coordinate values
-- Include confidence in your detections
-
-**Output Requirements:**
-Provide a clear list of detected objects with their corresponding bounding boxes and confidence scores."""
+        return ""
 
     def get_user_prompt(self, **kwargs) -> str:
         """Get the user prompt for Gemini object detection."""
@@ -429,4 +320,147 @@ Provide a clear list of detected objects with their corresponding bounding boxes
         """Get required parameters for this prompt."""
         return {
             "image": "PIL image or image path to analyze for object detection"
+        }
+
+
+class GridCellDetectionPrompt(BasePrompt):
+    """
+    Single-image grid detector with grouped outputs.
+    Returns a Python-literal dict (not JSON):
+    {
+      "confidence": [(conf1, conf2, ...), (conf1, ...), ...],
+      "cells":      [(cell1, cell2, ...), (cell1, ...), ...]
+    }
+    Each inner tuple corresponds to one physical object. Tuple lengths must match per group.
+    """
+
+    def __init__(self):
+        super().__init__(
+            name="grid_cell_detection_v2",
+            description="Grouped cells/confidence per object (single grid image)"
+        )
+    # ---------- geometry helpers ----------
+
+    @staticmethod
+    def _require(kwargs: Dict[str, Any], key: str):
+        if key not in kwargs or kwargs[key] is None:
+            raise KeyError(f"Missing required parameter: {key}")
+        return kwargs[key]
+
+    @classmethod
+    def _make_layout(cls, rows: int, cols: int) -> str:
+        lines = []
+        n = 1
+        for r in range(1, rows + 1):
+            row_ids = ", ".join(str(i) for i in range(n, n + cols))
+            lines.append(f"Row {r} - cells {row_ids}")
+            n += cols
+        return "\n".join(lines)
+
+    @classmethod
+    def _make_geometry(cls, rows: int, cols: int, W: int, H: int) -> Dict[str, Any]:
+        cw, ch = W / cols, H / rows
+        return {
+            "rows": rows,
+            "cols": cols,
+            "total": rows * cols,
+            "W": W,
+            "H": H,
+            "cell_w": cw,
+            "cell_h": ch,
+            "layout": cls._make_layout(rows, cols),
+            "formula": (
+                f"row = floor(cy / {ch:.6f}) + 1\n"
+                f"col = floor(cx / {cw:.6f}) + 1\n"
+                f"id  = (row-1)*{cols} + col   # row-major, 1-indexed"
+            ),
+        }
+
+    def _extract_geo(self, kwargs: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
+        """Pulls required args from kwargs and builds geometry dict.
+        Returns (geo_dict, object_name).
+        """
+        W, H = self._require(kwargs, "resolution")
+        rows, cols = self._require(kwargs, "grid_size")
+        obj = self._require(kwargs, "object_of_interest")
+        geo = self._make_geometry(int(rows), int(cols), int(W), int(H))
+        return geo, str(obj)
+
+    def get_system_prompt(self, **kwargs) -> str:
+        """Get the system prompt for grid cell detection."""
+        geo, obj = self._extract_geo(kwargs)
+        min_score = kwargs.get("confidence_threshold", 60)
+
+        return f"""You are a meticulous visual reasoning model analyzing images with grid overlays.
+        **Your Task:**
+        Analyze the provided image with a numbered red grid overlay and detect all instances of "{obj}".
+
+        **Output Format:**
+        Return a Python dict literal (NOT JSON) with this exact structure:
+        {{
+        "confidence": [(c11, c12, ...), (c21, ...), ...],
+        "cells":      [(id11, id12, ...), (id21, ...), ...]
+        }}
+        Each inner tuple represents one physical {obj}. Tuple lengths must match between confidence and cells.
+
+        **Grid Specifications:**
+        - Grid: {geo['rows']} rows × {geo['cols']} columns = {geo['total']} total cells
+        - Image: {geo['W']} × {geo['H']} pixels
+        - Cell size: {geo['cell_w']:.1f} × {geo['cell_h']:.1f} pixels
+        - Numbering: Row-major, 1-indexed (cell 1 is top-left, cell {geo['total']} is bottom-right)
+
+        **Cell Mapping Formula:**
+        - row = floor(cy / {geo['cell_h']:.1f}) + 1
+        - col = floor(cx / {geo['cell_w']:.1f}) + 1  
+        - cell_id = (row-1) × {geo['cols']} + col
+
+        **Important Instructions:**
+        - IGNORE red grid lines and numbers (pixels with R>200, G<60, B<60) - they are NOT objects
+        - Find every distinct {obj} visible under/through the grid
+        - Include ALL cells that an object touches, even partially
+        - Group cells by object: if one {obj} spans cells 5, 6, 10, 11, list them together
+
+        **Confidence Scoring (percentage of object in each cell):**
+        - 90-100: Most of the cell contains the object
+        - 80-89: About half the cell contains the object
+        - 70-79: Substantial portion but less than half
+        - 60-69: Small edge or corner of object
+        - Below {min_score}: Too uncertain - omit this cell
+
+        **Output Rules:**
+        - One tuple group per physical object
+        - Sort cells within each group in ascending order
+        - No duplicate cells within a group
+        - Drop cells outside range [1, {geo['total']}] or with confidence < {min_score}
+        - If no objects found: {{"confidence": [], "cells": []}}
+        - Use tuples (), not lists []
+        - Output ONLY the dict literal, no other text"""
+
+    def get_user_prompt(self, **kwargs) -> str:
+        """Get the user prompt for grid cell detection."""
+        geo, obj = self._extract_geo(kwargs)
+
+        return f"""Find all instances of "{obj}" in this grid image.
+
+    **Grid Information:**
+    - Dimensions: {geo['rows']} rows × {geo['cols']} columns = {geo['total']} cells
+    - Resolution: {geo['W']} × {geo['H']} pixels  
+    - Cell size: {geo['cell_w']:.1f} × {geo['cell_h']:.1f} pixels
+    - Numbering: 1 to {geo['total']} (left-to-right, top-to-bottom)
+
+    **Your Task:**
+    Identify which numbered cells contain any part of "{obj}".
+
+    Return a Python dict with grouped detections:
+    {{
+    "confidence": [(conf1, conf2, ...), ...],
+    "cells": [(cell1, cell2, ...), ...]
+    }}"""
+
+    def get_required_parameters(self) -> Dict[str, str]:
+        return {
+            "image": "PIL image with grid overlay",
+            "object_of_interest": "target object",
+            "resolution": "(W, H) pixels of the grid image",
+            "grid_size": "(rows, cols)",
         }

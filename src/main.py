@@ -99,6 +99,7 @@ if __name__ == "__main__":
         task = AdvancedReasoningModelTask(openai_agent, **args.task_kwargs)
     elif args.task_type == "multi_advanced_reasoning_model":
         task = MultiAdvancedReasoningModelTask(openai_agent, **args.task_kwargs)
+        raise NotImplementedError("Multi advanced reasoning model task is not fully implemented yet")
     elif args.task_type == "gemini":
         task = GeminiTask(gemini_agent)
     elif args.task_type == "vanilla_reasoning_model":

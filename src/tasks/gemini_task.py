@@ -34,7 +34,7 @@ class GeminiTask(BaseTask):
             structured_response = parse_detection_output(raw_response['output'])
             bounding_boxes = GeminiTask.extract_bounding_boxes(structured_response, image, normalization_factor)
         except Exception as e:
-            print(f"Error parsing structured response: {e}")
+            print(f"Error parsing structured response: {e}. Returning empty bounding boxes. Raw response: {raw_response['output']}")
             return {
                 "bboxs": [],
                 "overlay_images": []
