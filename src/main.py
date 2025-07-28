@@ -54,6 +54,7 @@ if __name__ == "__main__":
     # Task type
     args.add_argument("--task-type", type=str, required=False, default="advanced_reasoning_model")
     args.add_argument("--task-kwargs", type=dict, required=False, default={})
+    args.add_argument("--multiple-predictions", type=bool, required=False, default=False)
 
     # Dataset arguments
     args.add_argument("--dataset-path", type=str, required=False)
@@ -127,4 +128,4 @@ if __name__ == "__main__":
 # Example usage:
 # Option 1. Supply your own image: python main.py --image-path /path/to/image.jpg --object-of-interest "object of interest"
 # Option 2. Supply a dataset:python main.py --dataset-path /path/to/dataset.json --object-of-interest "object of interest" --dataset-split "train" --dataset-visualize True --dataset-trust-remote-code True --dataset-kwargs '{"task": "coco", "year": "2017"}'
-# python main.py --image-path /home/data/unitx/images/1645672134274-IR5J98FHAW.png --object-of-interest "defect chip. could be golden in color, like a tintish look. or just anything that looks hella abnormal"
+# python main.py --image-path /home/data/unitx/images/1645672134274-IR5J98FHAW.png --object-of-interest "defect chip. could be golden in color, like a tintish look. or just anything that looks hella abnormal" --multiple-predictions True

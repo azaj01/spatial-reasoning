@@ -33,7 +33,7 @@ class VisionModelTask(BaseTask):
             kwargs["image"], 
             kwargs["prompt"], 
             kwargs.get("nms_threshold", 0.7),
-            kwargs.get("multiple_boxes", False)) # TODO: expose this to the user
+            kwargs.get("multiple_predictions", False)) # TODO: expose this to the user
         
         if bbox_detections is None:
             return {'bboxs': [], 'overlay_images': []}
@@ -62,7 +62,7 @@ class VisionModelTask(BaseTask):
         image: Image.Image,
         prompt: str,
         nms_threshold: float,
-        multiple_boxes: bool
+        multiple_predictions: bool
     ) -> Cell:
         # Step 1: Use Grounding DINO to get bounding box from text
         inputs = self.processor(images=image, text=prompt, return_tensors="pt")
@@ -98,7 +98,7 @@ class VisionModelTask(BaseTask):
 
         # ADD NMS thresholding to minimize false positive
         filtered_results = nms(results['boxes'].cpu().numpy(), results['scores'].cpu().numpy(), nms_threshold)
-        if multiple_boxes:
+        if multiple_predictions:
             for idx, box in enumerate(filtered_results['boxes']):
                 detections.append(Cell(
                     id=idx + 1,

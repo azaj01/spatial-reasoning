@@ -1,3 +1,4 @@
+import random
 from typing import List
 
 from agents import BaseAgent
@@ -19,10 +20,12 @@ class GeminiTask(BaseTask):
         Arguments:
             image: Image.Image
             prompt: str
+            multiple_predictions: bool
         """
         image: Image.Image = kwargs['image']
         object_of_interest: str = kwargs['prompt']
         normalization_factor: float = kwargs.get('normalization_factor', 1000)
+        multiple_predictions: bool = kwargs.get('multiple_predictions', False)
 
         messages = [
             self.agent.create_text_message("user", self.prompt.get_system_prompt(normalization_factor=normalization_factor)),
@@ -39,12 +42,18 @@ class GeminiTask(BaseTask):
                 "bboxs": [],
                 "overlay_images": []
             }
-        
-        return {
-            "bboxs": bounding_boxes,
-            "overlay_images": [None] * len(bounding_boxes)
-        }
-       
+        if multiple_predictions:
+            return {
+                "bboxs": bounding_boxes,
+                "overlay_images": [None] * len(bounding_boxes)
+            }
+        else:
+            random_index = random.randint(0, len(bounding_boxes) - 1)
+            return {
+                "bboxs": [bounding_boxes[random_index]],
+                "overlay_images": [None]
+            }
+
     @staticmethod
     def extract_bounding_boxes(
         responses: list,

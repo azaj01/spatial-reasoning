@@ -76,7 +76,7 @@ class AdvancedReasoningModelTask(BaseTask):
         
         overlay_samples = []
         is_terminal_state = False
-        while not is_terminal_state or len(overlay_samples) < max_crops: # Either we've found the object or we've reached the max number of crops
+        while not is_terminal_state and len(overlay_samples) < max_crops:
             # TODO: convert this into a streaming application
             if image.width < 1024 or image.height < 1024:
                 _grid_size = (2, 2)

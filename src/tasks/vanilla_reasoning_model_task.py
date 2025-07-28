@@ -1,7 +1,10 @@
+import random
+
 from agents import BaseAgent
 from data import Cell
 from PIL import Image
 from prompts import SimpleDetectionPrompt
+from utils.image_utils import nms
 from utils.io_utils import parse_detection_output
 
 from .base_task import BaseTask
@@ -21,7 +24,8 @@ class VanillaReasoningModelTask(BaseTask):
         """
         image: Image.Image = kwargs['image']
         object_of_interest: str = kwargs['prompt']
-        confidence_threshold: float = kwargs.get("confidence_threshold", 0.65)
+        confidence_threshold: float = kwargs.get("confidence_threshold", 0.65)  # Treated as the NMS threshold
+        multiple_predictions: bool = kwargs.get('multiple_predictions', False)
 
         messages = [
             self.agent.create_text_message("system", self.prompt.get_system_prompt()),
@@ -46,10 +50,17 @@ class VanillaReasoningModelTask(BaseTask):
             bboxs.append(cell)
         
         # Filter out all bboxs that have confidence less than the threshold
-        bboxs = [bbox for bbox, confidence in zip(bboxs, confidence_scores) if confidence >= confidence_threshold]
+        filtered_results = nms(bboxs, confidence_scores, confidence_threshold)
+        bboxs = filtered_results['boxes']
         
-        
-        return {
-            "bboxs": bboxs,
-            "overlay_images": [None] * len(bboxs)
-        }
+        if multiple_predictions:
+            return {
+                "bboxs": bboxs,
+                "overlay_images": [None] * len(bboxs)
+            }
+        else:
+            random_index = random.randint(0, len(bboxs) - 1)
+            return {
+                "bboxs": [bboxs[random_index]],
+                "overlay_images": [None]
+            }
