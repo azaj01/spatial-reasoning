@@ -199,20 +199,3 @@ def _save_detection_outputs(
             )
 
     print(f"All outputs saved to: {output_folder_path}")
-
-
-# Example usage
-if __name__ == "__main__":
-    # Example 1: Basic detection
-    result = detect(
-        image_path="https://developer-blogs.nvidia.com/wp-content/uploads/2025/03/nvidia-dynamo-smart-router-accelerates-model-response-time.png",
-        object_of_interest="time to first token chart",
-        task_type="advanced_reasoning_model",
-        save_outputs=True
-    )
-
-    print(f"Found {len(result['bboxs'])} objects")
-    print(f"Bounding boxes: {result['bboxs']}")
-
-    visualized_image = result['visualized_image']
-    visualized_image.show()

@@ -1,0 +1,25 @@
+# Include documentation
+include README.md
+include LICENSE
+
+# Include requirements
+include requirements.txt
+
+# Include all Python files
+recursive-include src *.py
+
+# Include other important files
+recursive-include src *.json
+recursive-include src *.txt
+recursive-include src *.md
+
+# Exclude temporary and cache files
+global-exclude __pycache__
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *.swp
+global-exclude .DS_Store
+global-exclude *.egg-info
+
+# Exclude output directory
+prune src/output

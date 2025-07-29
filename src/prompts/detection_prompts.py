@@ -2,7 +2,6 @@
 from typing import Any, Dict, Tuple
 
 from data import Cell
-
 from .base_prompt import BasePrompt
 
 

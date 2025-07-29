@@ -4,7 +4,11 @@ from argparse import ArgumentParser
 from api import detect
 from utils.io_utils import get_timestamp
 
-if __name__ == "__main__":
+
+# Example usage:
+# python run_cli.py --image-path https://ix-cdn.b2e5.com/images/27094/27094_3063d356a3a54cc3859537fd23c5ba9d_1539205710.jpeg --object-of-interest "farthest scooter in the image" --task-kwargs '{"nms_threshold": 0.7, "multiple_predictions": false}' --task-type "gemini"
+def main():
+    """Main entry point for the CLI."""
     args = ArgumentParser()
     args.add_argument("--image-path", type=str, required=True)
     args.add_argument("--object-of-interest", type=str, required=True)
@@ -33,5 +37,5 @@ if __name__ == "__main__":
     print(f"Bounding boxes: {result['bboxs']}")
 
 
-# Example usage:
-# python main.py --image-path https://www.shutterstock.com/shutterstock/photos/1015857448/display_1500/stock-photo-detailed-photo-of-shoes-with-holes-in-them-and-toes-sticking-out-1015857448.jpg --object-of-interest "holes in shoes" --task-kwargs '{"nms_threshold": 0.7, "multiple_predictions": true}'
+if __name__ == "__main__":
+    main()
