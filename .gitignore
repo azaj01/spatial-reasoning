@@ -65,11 +65,6 @@ env/
 
 # Project specific
 output/
-*.jpg
-*.png
-*.jpeg
-*.gif
-*.bmp
 !docs/images/
 .env
 .env.local
