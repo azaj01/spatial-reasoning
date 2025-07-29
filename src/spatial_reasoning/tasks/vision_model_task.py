@@ -1,26 +1,16 @@
 import os
 import warnings
 
-# Try to import with flash attention, but disable if it fails
-try:
-    from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
-except ImportError as e:
-    if "flash_attn" in str(e):
-        warnings.warn("Flash Attention not available or incompatible. Disabling for compatibility.")
-        os.environ["FLASH_ATTENTION_SKIP_IMPORT"] = "1"
-        from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
-    else:
-        raise
-
 import cv2
 import numpy as np
 import torch
-from ..agents.base_agent import BaseAgent
-from ..data import Cell
 from PIL import Image
 from sam2.sam2_image_predictor import SAM2ImagePredictor
-from ..utils.image_utils import nms
+from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
 
+from ..agents.base_agent import BaseAgent
+from ..data import Cell
+from ..utils.image_utils import nms
 from .base_task import BaseTask
 
 
