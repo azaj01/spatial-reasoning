@@ -1,5 +1,5 @@
 from .base_data import BaseDataset
 from .cell_data import Cell
-from .detection_data import DetectionDataset
+from .detection_data import CoCoDetectionDataset
 
-__all__ = ["BaseDataset", "DetectionDataset", "Cell"]
+__all__ = ["BaseDataset", "CoCoDetectionDataset", "Cell"]
