@@ -24,7 +24,10 @@ A powerful Python package for object detection using advanced vision and reasoni
   *Detecting objects in challenging conditions where traditional models fail*
   
   ![Hard Example 2](assets/hard_example_2.png)
-  *Another demonstration of handling complex, ambiguous queries with precision*
+  *Complex query: Finding specific objects with nuanced requirements*
+  
+  ![Hard Example 2 Reasoning Process](assets/hard_example_2_reasoning_process.png)
+  *Step-by-step breakdown of how the advanced reasoning model solves complex detection tasks*
 
 - **Simple API**: One function for all your detection needs
 - **CLI Support**: Command-line interface for quick testing
