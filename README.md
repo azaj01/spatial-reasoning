@@ -22,6 +22,9 @@ A powerful Python package for object detection using advanced vision and reasoni
   
   ![Hard Example](assets/hard_example.png)
   *Detecting objects in challenging conditions where traditional models fail*
+  
+  ![Hard Example 2](assets/hard_example_2.png)
+  *Another demonstration of handling complex, ambiguous queries with precision*
 
 - **Simple API**: One function for all your detection needs
 - **CLI Support**: Command-line interface for quick testing
