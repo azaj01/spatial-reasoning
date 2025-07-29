@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Union
 
 from PIL import Image
-from utils.image_utils import image_to_base64
+from ..utils.image_utils import image_to_base64
 
 
 class BaseAgent(ABC):

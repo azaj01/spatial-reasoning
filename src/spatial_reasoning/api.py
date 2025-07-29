@@ -3,15 +3,15 @@ import os
 import time
 from typing import Dict, List, Optional, Union
 
-from agents.agent_factory import AgentFactory
-from data import BaseDataset, Cell
+from .agents.agent_factory import AgentFactory
+from .data import BaseDataset, Cell
 from dotenv import load_dotenv
 from PIL import Image
-from tasks import (AdvancedReasoningModelTask, GeminiTask,
-                   MultiAdvancedReasoningModelTask, VanillaReasoningModelTask,
-                   VisionModelTask)
-from utils.io_utils import (convert_list_of_cells_to_list_of_bboxes,
-                            download_image, get_timestamp)
+from .tasks import (AdvancedReasoningModelTask, GeminiTask,
+                    MultiAdvancedReasoningModelTask, VanillaReasoningModelTask,
+                    VisionModelTask)
+from .utils.io_utils import (convert_list_of_cells_to_list_of_bboxes,
+                             download_image, get_timestamp)
 
 # Load environment variables
 load_dotenv()

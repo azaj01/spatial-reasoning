@@ -5,7 +5,7 @@ import time
 from io import BytesIO
 
 import requests
-from data import Cell
+from ..data import Cell
 from PIL import Image
 
 

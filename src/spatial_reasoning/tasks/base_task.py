@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from agents import BaseAgent
+from ..agents import BaseAgent
 
 
 class BaseTask(ABC):

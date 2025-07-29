@@ -4,12 +4,12 @@ from typing import Dict, Tuple, Union
 
 import numpy as np
 import torch
-from agents import BaseAgent
-from data import Cell
+from ..agents import BaseAgent
+from ..data import Cell
 from PIL import Image, ImageDraw, ImageFont
-from prompts import (GridCellDetectionPrompt,
-                     SingleObjectGridCellTwoImagesDetectionPrompt)
-from utils.io_utils import get_original_bounding_box, parse_detection_output
+from ..prompts import (GridCellDetectionPrompt,
+                      SingleObjectGridCellTwoImagesDetectionPrompt)
+from ..utils.io_utils import get_original_bounding_box, parse_detection_output
 
 from .base_task import BaseTask
 from .vanilla_reasoning_model_task import VanillaReasoningModelTask

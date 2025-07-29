@@ -1,6 +1,6 @@
 # PyPI Package Upload Instructions
 
-This document contains instructions for building and uploading the vision-evals package to PyPI.
+This document contains instructions for building and uploading the spatial-reasoning package to PyPI.
 
 ## Prerequisites
 
@@ -18,7 +18,7 @@ This document contains instructions for building and uploading the vision-evals 
 
 1. **Navigate to the package directory** (where setup.py is located):
    ```bash
-   cd /home/qasim/code/exp/vision_evals
+   cd /home/qasim/code/exp/spatial_reasoning
    ```
 
 2. **Clean previous builds** (if any):
@@ -32,8 +32,8 @@ This document contains instructions for building and uploading the vision-evals 
    ```
    
    This will create:
-   - `dist/vision-evals-0.1.0.tar.gz` (source distribution)
-   - `dist/vision_evals-0.1.0-py3-none-any.whl` (wheel distribution)
+   - `dist/spatial-reasoning-0.1.0.tar.gz` (source distribution)
+   - `dist/spatial_reasoning-0.1.0-py3-none-any.whl` (wheel distribution)
 
 ## Testing Locally (Optional but Recommended)
 
@@ -45,18 +45,18 @@ This document contains instructions for building and uploading the vision-evals 
 
 2. **Install the package locally**:
    ```bash
-   pip install dist/vision_evals-0.1.0-py3-none-any.whl
+   pip install dist/spatial_reasoning-0.1.0-py3-none-any.whl
    ```
 
 3. **Test the installation**:
    ```python
-   from vision_evals import detect
+   from spatial_reasoning import detect
    print(detect.__doc__)
    ```
 
 4. **Test CLI**:
    ```bash
-   vision-evals --help
+   spatial-reasoning --help
    ```
 
 ## Uploading to PyPI
@@ -74,7 +74,7 @@ This document contains instructions for building and uploading the vision-evals 
 
 2. **Test installation from Test PyPI**:
    ```bash
-   pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ vision-evals
+   pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ spatial-reasoning
    ```
 
 ### Option 2: Direct Upload to PyPI
@@ -115,12 +115,12 @@ python -m twine upload --repository pypi dist/*
 ## Post-Upload Steps
 
 1. **Verify on PyPI**:
-   - Visit https://pypi.org/project/vision-evals/
+   - Visit https://pypi.org/project/spatial-reasoning/
    - Check that all information displays correctly
 
 2. **Install and test**:
    ```bash
-   pip install vision-evals
+   pip install spatial-reasoning
    ```
 
 3. **Update GitHub repository**:
@@ -142,7 +142,7 @@ When releasing a new version:
 
 ## Common Issues
 
-1. **Name conflicts**: If "vision-evals" is taken, you'll need to choose a different name
+1. **Name conflicts**: If "spatial-reasoning" is taken, you'll need to choose a different name
 2. **Missing dependencies**: Ensure all dependencies are listed in requirements.txt
 3. **Import errors**: Test thoroughly before uploading
 4. **Authentication issues**: Make sure to use `__token__` as username with API tokens

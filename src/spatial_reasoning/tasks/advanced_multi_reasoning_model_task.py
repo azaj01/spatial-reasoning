@@ -5,11 +5,11 @@ from dataclasses import dataclass
 from typing import Optional, Tuple
 
 import numpy as np
-from agents import BaseAgent
+from ..agents import BaseAgent
 from PIL import Image
-from prompts import SimplifiedGridCellDetectionPrompt
+from ..prompts import SimplifiedGridCellDetectionPrompt
 from scipy.ndimage import label
-from utils.io_utils import get_original_bounding_box, parse_detection_output
+from ..utils.io_utils import get_original_bounding_box, parse_detection_output
 
 from .advanced_reasoning_model_task import AdvancedReasoningModelTask
 from .base_task import BaseTask
@@ -301,8 +301,6 @@ class MultiAdvancedReasoningModelTask(BaseTask):
                 continue
 
             cropped_data = MultiAdvancedReasoningModelTask.crop_image(image, cell_group, cell_lookup, origin_coordinates)
-            # save cropped_image to a file for debugging
-            cropped_data['cropped_image'].save(f"/home/qasim/code/exp/vision_evals/cropped_image_{i}.png")
 
             is_terminal = self.is_terminating_state(cell_group, grid_size, convergence_threshold)
 

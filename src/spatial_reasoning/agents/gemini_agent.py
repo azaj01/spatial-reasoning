@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 from google import genai
 from google.genai import types
-from utils.image_utils import base64_to_image
+from ..utils.image_utils import base64_to_image
 
 from .base_agent import BaseAgent
 

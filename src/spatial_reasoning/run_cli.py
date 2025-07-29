@@ -1,8 +1,8 @@
 import json
 from argparse import ArgumentParser
 
-from api import detect
-from utils.io_utils import get_timestamp
+from .api import detect
+from .utils.io_utils import get_timestamp
 
 
 # Example usage:

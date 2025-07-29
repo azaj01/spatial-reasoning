@@ -1,10 +1,10 @@
 import random
 
-from agents import BaseAgent
-from data import Cell
+from ..agents import BaseAgent
+from ..data import Cell
 from PIL import Image
-from prompts import SimpleDetectionPrompt
-from utils.io_utils import parse_detection_output
+from ..prompts import SimpleDetectionPrompt
+from ..utils.io_utils import parse_detection_output
 
 from .base_task import BaseTask
 

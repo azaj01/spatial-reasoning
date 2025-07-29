@@ -1,4 +1,4 @@
-"""Setup configuration for vision_evals package."""
+"""Setup configuration for spatial_reasoning package."""
 
 import os
 from setuptools import setup, find_packages
@@ -13,18 +13,18 @@ with open(os.path.join(this_directory, 'requirements.txt'), encoding='utf-8') as
     requirements = [line.strip() for line in f if line.strip() and not line.startswith('#')]
 
 setup(
-    name='vision-evals',
+    name='spatial-reasoning',
     version='0.1.0',
     author='Qasim Wani',
     author_email='qasim31wani@gmail.com',
     description='A PyPI package for object detection using advanced vision models',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/yourusername/vision-evals',
+    url='https://github.com/QasimWani/spatial-reasoning',
     project_urls={
-        'Bug Tracker': 'https://github.com/yourusername/vision-evals/issues',
-        'Documentation': 'https://github.com/yourusername/vision-evals#readme',
-        'Source Code': 'https://github.com/yourusername/vision-evals',
+        'Bug Tracker': 'https://github.com/QasimWani/spatial-reasoning/issues',
+        'Documentation': 'https://github.com/QasimWani/spatial-reasoning#readme',
+        'Source Code': 'https://github.com/QasimWani/spatial-reasoning',
     },
     package_dir={'': 'src'},
     packages=find_packages(where='src', exclude=['tests*', 'docs*']),
@@ -54,7 +54,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'vision-evals=run_cli:main',
+            'spatial-reasoning=spatial_reasoning.run_cli:main',
         ],
     },
     include_package_data=True,

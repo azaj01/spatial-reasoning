@@ -1,4 +1,4 @@
-# Vision Evals
+# Spatial Reasoning
 
 A powerful Python package for object detection using advanced vision and reasoning models, including OpenAI's models and Google's Gemini.
 
@@ -35,15 +35,25 @@ A powerful Python package for object detection using advanced vision and reasoni
 ## Installation
 
 ```bash
-pip install vision-evals
+pip install spatial-reasoning
 ```
 
 Or install from source:
 ```bash
-git clone https://github.com/yourusername/vision-evals.git
-cd vision_evals
+git clone https://github.com/QasimWani/spatial-reasoning.git
+cd spatial_reasoning
 pip install -e .
 ```
+
+### Optional: Flash Attention (for better performance)
+
+For improved performance with transformer models, you can optionally install Flash Attention:
+
+```bash
+pip install flash-attn --no-build-isolation
+```
+
+Note: Flash Attention requires CUDA development tools and must be compiled for your specific PyTorch/CUDA version. The package will work without it, just with slightly reduced performance.
 
 ## Setup
 
@@ -64,7 +74,7 @@ Get your API keys:
 ### Python API
 
 ```python
-from vision_evals import detect
+from spatial_reasoning import detect
 
 # Detect objects in an image
 result = detect(
@@ -86,10 +96,10 @@ visualized_image.save("output.jpg")
 
 ```bash
 # Basic usage
-vision-evals --image-path "image.jpg" --object-of-interest "person"  # "advanced_reasoning_model" used by default
+spatial-reasoning --image-path "image.jpg" --object-of-interest "person"  # "advanced_reasoning_model" used by default
 
 # With specific model
-vision-evals --image-path "image.jpg" --object-of-interest "cat" --task-type "gemini"
+spatial-reasoning --image-path "image.jpg" --object-of-interest "cat" --task-type "gemini"
 
 # From URL with custom parameters
 vision-evals \
