@@ -1,7 +1,8 @@
 """Setup configuration for spatial_reasoning package."""
 
 import os
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 # Read the contents of README file
 this_directory = os.path.abspath(os.path.dirname(__file__))
@@ -14,7 +15,7 @@ with open(os.path.join(this_directory, 'requirements.txt'), encoding='utf-8') as
 
 setup(
     name='spatial-reasoning',
-    version='0.1.0',
+    version='0.1.1',
     author='Qasim Wani',
     author_email='qasim31wani@gmail.com',
     description='A PyPI package for object detection using advanced vision models',

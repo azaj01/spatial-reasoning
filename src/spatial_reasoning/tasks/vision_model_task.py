@@ -5,7 +5,6 @@ import cv2
 import numpy as np
 import torch
 from PIL import Image
-from sam2.sam2_image_predictor import SAM2ImagePredictor
 from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
 
 from ..agents.base_agent import BaseAgent
@@ -17,10 +16,24 @@ from .base_task import BaseTask
 class VisionModelTask(BaseTask):
     def __init__(self, agent: BaseAgent, **kwargs):
         super().__init__(agent, **kwargs)
+        
+        # Suppress the specific warning about meta parameters
+        warnings.filterwarnings('ignore', message='copying from a non-meta parameter')
+        
+        # Load processor
         self.processor = AutoProcessor.from_pretrained("IDEA-Research/grounding-dino-base")
-        self.model = AutoModelForZeroShotObjectDetection.from_pretrained("IDEA-Research/grounding-dino-base")
-        self.sam2_predictor = SAM2ImagePredictor.from_pretrained("facebook/sam2-hiera-large")
-    
+        
+        # Load model with proper device mapping
+        self.model = AutoModelForZeroShotObjectDetection.from_pretrained(
+            "IDEA-Research/grounding-dino-base",
+            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+            device_map="auto" if torch.cuda.is_available() else None
+        )
+        
+        # Move model to appropriate device
+        if torch.cuda.is_available():
+            self.model = self.model.cuda()
+        
     def execute(self, **kwargs) -> dict:
         """
         Run GroundingDino + SAM
@@ -30,7 +43,6 @@ class VisionModelTask(BaseTask):
             nms_threshold: float
         """
         
-        return_sam_masks = kwargs.get("return_sam_masks", False)
         nms_threshold = kwargs.get("nms_threshold", 0.7)
         multiple_predictions = kwargs.get("multiple_predictions", False)
 
@@ -44,19 +56,7 @@ class VisionModelTask(BaseTask):
         if bbox_detections is None:
             return {'bboxs': [], 'overlay_images': []}
         
-        # Given that we don't support Segmentation as a task, there's no need
-        # to return the overlay images. Added as optional logic for future use.
-
-        overlay_images = []
-        
-        if return_sam_masks:
-            for bbox in bbox_detections:
-                _, overlay_image = self.detect_sam(
-                    kwargs["image"], bbox
-                )
-                overlay_images.append(overlay_image)
-        else:
-            overlay_images = [None] * len(bbox_detections)
+        overlay_images = [None] * len(bbox_detections)
 
         return {
             "bboxs": bbox_detections,
@@ -72,6 +72,11 @@ class VisionModelTask(BaseTask):
     ) -> Cell:
         # Step 1: Use Grounding DINO to get bounding box from text
         inputs = self.processor(images=image, text=prompt, return_tensors="pt")
+        
+        # Move inputs to the same device as the model
+        if torch.cuda.is_available():
+            inputs = {k: v.cuda() if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}
+        
         with torch.no_grad():
             outputs = self.model(**inputs)
         
@@ -124,39 +129,3 @@ class VisionModelTask(BaseTask):
             ))
 
         return detections
-
-    def detect_sam(
-        self, image: Image.Image, bbox: Cell
-    ) -> tuple[Cell, Image.Image]:
-        """
-        Run SAM to get a mask for the object of interest
-        """
-        with torch.inference_mode(), torch.autocast(
-            "cuda", dtype=torch.bfloat16
-        ):
-            self.sam2_predictor.set_image(image)
-            _bbox = np.array([bbox.left, bbox.top, bbox.right, bbox.bottom])
-            masks, _, _ = self.sam2_predictor.predict(box=_bbox, multimask_output=False)
-            mask: np.ndarray = masks[0]
-
-            # Create a semi-transparent mask
-            overlay_image = image.copy()
-            mask_color = Image.new('RGBA', image.size, (255, 0, 0, 128))
-            mask_alpha = Image.fromarray((mask * 128).astype(np.uint8))
-            mask_color.putalpha(mask_alpha)
-
-            # Composite the mask onto the image
-            overlay_image = Image.alpha_composite(
-                overlay_image.convert('RGBA'),
-                mask_color
-            ).convert('RGB')
-
-            # I don't think there's a point in returning the bounding box
-            # since GroundingDINO already returns the bounding box and
-            # is equivalent to the bounding box returned by SAM. However,
-            # for the sake of consistency with the other tasks, we're
-            # returning the bounding box.
-            x, y, w, h = cv2.boundingRect(mask.astype(np.uint8))
-            return Cell(
-                id=bbox.id, left=x, top=y, right=x+w, bottom=y+h
-            ), overlay_image

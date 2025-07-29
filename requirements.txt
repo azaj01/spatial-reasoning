@@ -14,7 +14,6 @@ openai>=1.0.0
 google-genai
 transformers>=4.30.0
 datasets>=2.0.0
-sam2>=0.1.0  # Segment Anything Model 2
 
 # Optional development dependencies
 # pytest>=7.0.0

@@ -3,18 +3,198 @@ import os
 import time
 from typing import Dict, List, Optional, Union
 
-from .agents.agent_factory import AgentFactory
-from .data import BaseDataset, Cell
 from dotenv import load_dotenv
 from PIL import Image
+
+from .agents.agent_factory import AgentFactory
+from .data import BaseDataset, Cell
 from .tasks import (AdvancedReasoningModelTask, GeminiTask,
-                    MultiAdvancedReasoningModelTask, VanillaReasoningModelTask,
-                    VisionModelTask)
+                    VanillaReasoningModelTask, VisionModelTask)
 from .utils.io_utils import (convert_list_of_cells_to_list_of_bboxes,
                              download_image, get_timestamp)
 
 # Load environment variables
 load_dotenv()
+
+
+class OptimizedDetectionAPI:
+    """
+    Optimized API that loads agents and models only once to prevent CUDA memory issues.
+    """
+    
+    def __init__(self):
+        self._agents = {}
+        self._tasks = {}
+        self._initialized = False
+        self._initialize_if_needed()
+    
+    def _initialize_if_needed(self):
+        """Lazy initialization of agents and tasks."""
+        if not self._initialized:
+            print("Initializing agents and models...")
+            
+            # Initialize OpenAI agent
+            self._agents['openai'] = AgentFactory.create_agent(
+                model="o4-mini", 
+                platform_name="openai"
+            )
+            
+            # Initialize Gemini agent
+            self._agents['gemini'] = AgentFactory.create_agent(
+                model="gemini-2.5-flash", 
+                platform_name="gemini"
+            )
+            
+            # Initialize tasks
+            self._tasks['advanced_reasoning_model'] = AdvancedReasoningModelTask(
+                self._agents['openai']
+            )
+            self._tasks['vanilla_reasoning_model'] = VanillaReasoningModelTask(
+                self._agents['openai']
+            )
+            self._tasks['vision_model'] = VisionModelTask(
+                self._agents['openai']
+            )
+            self._tasks['gemini'] = GeminiTask(
+                self._agents['gemini']
+            )
+            # Multi advanced reasoning model task is not fully implemented yet
+            # self._tasks['multi_advanced_reasoning_model'] = MultiAdvancedReasoningModelTask(
+            #     self._agents['openai']
+            # )
+            
+            self._initialized = True
+            print("Initialization complete!")
+    
+    def detect(
+        self,
+        image_path: str,
+        object_of_interest: str,
+        task_type: str,
+        task_kwargs: Optional[Dict] = None,
+        save_outputs: bool = False,
+        output_folder_path: Optional[str] = None,
+        return_overlay_images: bool = True
+    ) -> Dict[str, Union[List, float, Image.Image]]:
+        """
+        Main detection function that processes an image and returns bounding boxes
+        for objects of interest.
+        
+        Args:
+            image_path (str): Path to the image file or URL
+            object_of_interest (str): Description of what to detect in the image
+            task_type (str): Type of detection task to run. Options:
+                - "advanced_reasoning_model"
+                - "vanilla_reasoning_model"
+                - "vision_model"
+                - "gemini"
+                - "multi_advanced_reasoning_model"
+            task_kwargs (dict, optional): Additional parameters for the task
+                Example: {"nms_threshold": 0.7, "multiple_predictions": True}
+            save_outputs (bool): Whether to save output files to disk
+            output_folder_path (str, optional): Where to save outputs if save_outputs=True
+            return_overlay_images (bool): Whether to return overlay images in the result
+        
+        Returns:
+            dict: Dictionary containing:
+                - "bboxs": List of bounding boxes [[x1, y1, x2, y2], ...]
+                - "visualized_image": PIL Image with bounding boxes drawn
+                - "original_image": Original PIL Image
+                - "overlay_images": List of overlay images (if any)
+                - "total_time": Processing time in seconds
+                - "object_of_interest": The object that was searched for
+                - "task_type": The task type that was used
+                - "task_kwargs": The task parameters that were used
+        """
+        
+        # Initialize agents and tasks if not already done
+        self._initialize_if_needed()
+        
+        # Initialize task_kwargs if not provided
+        if task_kwargs is None:
+            task_kwargs = {}
+        
+        # Start timing
+        start_time = time.perf_counter()
+        
+        # Load the image
+        print(f"Loading image from: {image_path}")
+        if image_path.startswith("http"):
+            image = download_image(image_path)
+        else:
+            image = Image.open(image_path).convert("RGB")
+        
+        print(f"Image loaded successfully. Size: {image.size}")
+        
+        # Check if task type is supported
+        if task_type not in self._tasks:
+            if task_type == "multi_advanced_reasoning_model":
+                raise NotImplementedError("Multi advanced reasoning model task is not fully implemented yet")
+            else:
+                raise ValueError(f"Unsupported task type: {task_type}")
+        
+        # Get the appropriate task
+        task = self._tasks[task_type]
+        
+        # Execute the detection task
+        print(f"Executing detection for object: '{object_of_interest}'")
+        print(f"Task kwargs: {task_kwargs}")
+        
+        output = task.execute(
+            image=image,
+            prompt=object_of_interest,
+            **task_kwargs
+        )
+        
+        # Convert Cell objects to bounding boxes if needed
+        if len(output['bboxs']) > 0 and isinstance(output['bboxs'][0], Cell):
+            print(f"Converting {len(output['bboxs'])} cells to bboxes")
+            output['bboxs'] = convert_list_of_cells_to_list_of_bboxes(output['bboxs'])
+        
+        # Calculate total processing time
+        total_time = time.perf_counter() - start_time
+        print(f"Detection completed in {total_time:.2f} seconds")
+        print(f"Found {len(output['bboxs'])} bounding boxes")
+        
+        # Create visualized image with bounding boxes
+        visualized_image = BaseDataset.visualize_image(
+            image,
+            output['bboxs'],
+            return_image=True
+        )
+        
+        # Prepare the result dictionary
+        result = {
+            "bboxs": output['bboxs'],
+            "visualized_image": visualized_image,
+            "original_image": image,
+            "overlay_images": output.get('overlay_images', []),
+            "total_time": total_time,
+            "object_of_interest": object_of_interest,
+            "task_type": task_type,
+            "task_kwargs": task_kwargs
+        }
+
+        # Save outputs if requested
+        if save_outputs:
+            if output_folder_path is None:
+                output_folder_path = f"./output/{get_timestamp()}"
+
+            print(f"Saving outputs to: {output_folder_path}")
+            _save_detection_outputs(
+                output_folder_path=output_folder_path,
+                result=result
+            )
+
+        # Remove overlay images from result if not requested
+        if not return_overlay_images:
+            result.pop('overlay_images', None)
+
+        return result
+
+
+# Create a singleton instance
+_api_instance = OptimizedDetectionAPI()
 
 
 def detect(
@@ -28,7 +208,8 @@ def detect(
 ) -> Dict[str, Union[List, float, Image.Image]]:
     """
     Main detection function that processes an image and returns bounding boxes
-    for objects of interest.
+    for objects of interest. This function uses a singleton instance to avoid
+    reloading models on every call.
     
     Args:
         image_path (str): Path to the image file or URL
@@ -56,103 +237,15 @@ def detect(
             - "task_type": The task type that was used
             - "task_kwargs": The task parameters that were used
     """
-    
-    # Initialize task_kwargs if not provided
-    if task_kwargs is None:
-        task_kwargs = {}
-    
-    # Start timing
-    start_time = time.perf_counter()
-    
-    # Load the image
-    print(f"Loading image from: {image_path}")
-    if image_path.startswith("http"):
-        image = download_image(image_path)
-    else:
-        image = Image.open(image_path).convert("RGB")
-    
-    print(f"Image loaded successfully. Size: {image.size}")
-    
-    # Create the appropriate agent based on task type
-    print(f"Initializing task type: {task_type}")
-    
-    if task_type in ["advanced_reasoning_model", "vanilla_reasoning_model", "vision_model", "multi_advanced_reasoning_model"]:
-        agent = AgentFactory.create_agent(model="o4-mini", platform_name="openai")
-    elif task_type == "gemini":
-        agent = AgentFactory.create_agent(model="gemini-2.5-flash", platform_name="gemini")
-    else:
-        raise ValueError(f"Unsupported task type: {task_type}")
-    
-    # Create the appropriate task
-    if task_type == "advanced_reasoning_model":
-        task = AdvancedReasoningModelTask(agent)
-    elif task_type == "multi_advanced_reasoning_model":
-        task = MultiAdvancedReasoningModelTask(agent)
-        raise NotImplementedError("Multi advanced reasoning model task is not fully implemented yet")
-    elif task_type == "gemini":
-        task = GeminiTask(agent)
-    elif task_type == "vanilla_reasoning_model":
-        task = VanillaReasoningModelTask(agent)
-    elif task_type == "vision_model":
-        task = VisionModelTask(agent)
-    else:
-        raise ValueError(f"Task type {task_type} not supported")
-    
-    # Execute the detection task
-    print(f"Executing detection for object: '{object_of_interest}'")
-    print(f"Task kwargs: {task_kwargs}")
-    
-    output = task.execute(
-        image=image,
-        prompt=object_of_interest,
-        **task_kwargs
+    return _api_instance.detect(
+        image_path=image_path,
+        object_of_interest=object_of_interest,
+        task_type=task_type,
+        task_kwargs=task_kwargs,
+        save_outputs=save_outputs,
+        output_folder_path=output_folder_path,
+        return_overlay_images=return_overlay_images
     )
-    
-    # Convert Cell objects to bounding boxes if needed
-    if len(output['bboxs']) > 0 and isinstance(output['bboxs'][0], Cell):
-        print(f"Converting {len(output['bboxs'])} cells to bboxes")
-        output['bboxs'] = convert_list_of_cells_to_list_of_bboxes(output['bboxs'])
-    
-    # Calculate total processing time
-    total_time = time.perf_counter() - start_time
-    print(f"Detection completed in {total_time:.2f} seconds")
-    print(f"Found {len(output['bboxs'])} bounding boxes")
-    
-    # Create visualized image with bounding boxes
-    visualized_image = BaseDataset.visualize_image(
-        image,
-        output['bboxs'],
-        return_image=True
-    )
-    
-    # Prepare the result dictionary
-    result = {
-        "bboxs": output['bboxs'],
-        "visualized_image": visualized_image,
-        "original_image": image,
-        "overlay_images": output.get('overlay_images', []),
-        "total_time": total_time,
-        "object_of_interest": object_of_interest,
-        "task_type": task_type,
-        "task_kwargs": task_kwargs
-    }
-
-    # Save outputs if requested
-    if save_outputs:
-        if output_folder_path is None:
-            output_folder_path = f"./output/{get_timestamp()}"
-
-        print(f"Saving outputs to: {output_folder_path}")
-        _save_detection_outputs(
-            output_folder_path=output_folder_path,
-            result=result
-        )
-
-    # Remove overlay images from result if not requested
-    if not return_overlay_images:
-        result.pop('overlay_images', None)
-
-    return result
 
 
 def _save_detection_outputs(
