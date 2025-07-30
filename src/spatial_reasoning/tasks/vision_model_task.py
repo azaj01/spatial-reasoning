@@ -1,7 +1,5 @@
-import os
 import warnings
 
-import cv2
 import numpy as np
 import torch
 from PIL import Image
@@ -26,8 +24,7 @@ class VisionModelTask(BaseTask):
         # Load model with proper device mapping
         self.model = AutoModelForZeroShotObjectDetection.from_pretrained(
             "IDEA-Research/grounding-dino-base",
-            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-            device_map="auto" if torch.cuda.is_available() else None
+            torch_dtype=torch.float32
         )
         
         # Move model to appropriate device
@@ -83,7 +80,7 @@ class VisionModelTask(BaseTask):
         # Process outputs
         results = self.processor.post_process_grounded_object_detection(
             outputs,
-            inputs.input_ids,
+            inputs['input_ids'],
             box_threshold=0.15,
             text_threshold=0.25,
             target_sizes=[(image.height, image.width)]
@@ -96,7 +93,7 @@ class VisionModelTask(BaseTask):
                 outputs = self.model(**inputs)
             results = self.processor.post_process_grounded_object_detection(
                 outputs,
-                inputs.input_ids,
+                inputs['input_ids'],
                 box_threshold=0.2,
                 text_threshold=0.25,
                 target_sizes=[(image.height, image.width)]

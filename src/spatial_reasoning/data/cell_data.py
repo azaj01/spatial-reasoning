@@ -16,3 +16,6 @@ class Cell:
     
     def __str__(self):
         return f"Cell(id={self.id}, left={self.left}, top={self.top}, right={self.right}, bottom={self.bottom})"
+    
+    def to_tuple(self) -> Tuple[int, int, int, int]:
+        return self.left, self.top, self.right - self.left, self.bottom - self.top

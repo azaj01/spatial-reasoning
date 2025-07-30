@@ -4,13 +4,13 @@ from typing import Dict, Tuple, Union
 
 import numpy as np
 import torch
-from ..agents import BaseAgent
-from ..data import Cell
 from PIL import Image, ImageDraw, ImageFont
-from ..prompts import (GridCellDetectionPrompt,
-                      SingleObjectGridCellTwoImagesDetectionPrompt)
-from ..utils.io_utils import get_original_bounding_box, parse_detection_output
 
+from ..agents import BaseAgent
+from ..data import BaseDataset, Cell
+from ..prompts import (GridCellDetectionPrompt,
+                       SingleObjectGridCellTwoImagesDetectionPrompt)
+from ..utils.io_utils import get_original_bounding_box, parse_detection_output
 from .base_task import BaseTask
 from .vanilla_reasoning_model_task import VanillaReasoningModelTask
 from .vision_model_task import VisionModelTask
@@ -63,43 +63,47 @@ class AdvancedReasoningModelTask(BaseTask):
         """
         image: Image.Image = kwargs['image']
         object_of_interest: str = kwargs['prompt']
-        
-        grid_size = self.kwargs.get("grid_size", (4, 3))  # num_rows x num_cols
-        max_crops = self.kwargs.get('max_crops', 4)
-        if image.width < 2048 and image.height < 2048:
-            max_crops = 3
-        top_k = self.kwargs.get("top_k", -1)  # TODO: give user the flexibility if they want to detect one object or multiple
-        confidence_threshold = self.kwargs.get("confidence_threshold", 0.5)
-        convergence_threshold = self.kwargs.get("convergence_threshold", 0.5)
-        
+        grid_size = kwargs.get("grid_size", (4, 3))  # num_rows x num_cols
+        max_crops = kwargs.get('max_crops', 4)
+        top_k = kwargs.get("top_k", -1)  # TODO: give user the flexibility if they want to detect one object or multiple
+        confidence_threshold = kwargs.get("confidence_threshold", 0.5)
+        convergence_threshold = kwargs.get("convergence_threshold", 0.6)
+
         origin_coordinates = (0, 0)
-        
+
         overlay_samples = []
         is_terminal_state = False
         while not is_terminal_state and len(overlay_samples) < max_crops:
             # TODO: convert this into a streaming application
-            if image.width < 1024 and image.height < 1024:
-                _grid_size = (2, 2)
+            if image.width < 512 and image.height < 512 and len(overlay_samples) > 0:  # initial state, pick the default grid size
+                _grid_size = (3, 2)
             else:
                 _grid_size = grid_size
             overlay_image, image, origin_coordinates, is_terminal_state = self.run_single_crop_process(image.copy(), object_of_interest, origin_coordinates, _grid_size, top_k, confidence_threshold, convergence_threshold)
             
             overlay_samples.append(overlay_image)
             # Now, if the model doesn't think it can find the object in the image, we should probably just return the original image
-            if is_terminal_state and not image:
-                return {
-                    'bboxs': [],
-                    'overlay_images': overlay_samples,
-                    'crop_origin': origin_coordinates
-                }
+            # if is_terminal_state and not image:
+            #     return {
+            #         'bboxs': [],
+            #         'overlay_images': overlay_samples,
+            #         'crop_origin': origin_coordinates
+            #     }
             
         kwargs['image'] = image
         # Run both agents in parallel
         vision_out, vanilla_out = self.run_agents_parallel(**kwargs)
-        
+
         # output from vision agent is preferred if the number of predictions matches between the two agents
-        out = vision_out if len(vision_out['bboxs']) == len(vanilla_out['bboxs']) else vanilla_out
-        # out = vanilla_out
+        # out = vision_out if len(vision_out['bboxs']) == len(vanilla_out['bboxs']) else vanilla_out
+        out = vanilla_out
+        # also upload the final image to the output
+        cropped_visualized_image = BaseDataset.visualize_image(
+            image,
+            [cell.to_tuple() for cell in out['bboxs']],
+            return_image=True
+        )
+        overlay_samples.append(cropped_visualized_image)
         # Restore to original coordinates
         restored_bboxs = get_original_bounding_box(
             cropped_bounding_boxs=out['bboxs'],
@@ -166,12 +170,7 @@ class AdvancedReasoningModelTask(BaseTask):
             print(
                 "Unable to get object in the grid, most likely due to it not being found in the image."
             )
-            return [
-                overlay_image,
-                None,
-                origin_coordinates,
-                True
-            ]
+            return overlay_image, image, origin_coordinates, True
 
         crop_origin = (
             origin_coordinates[0] + cropped_image_data["crop_origin"][0],

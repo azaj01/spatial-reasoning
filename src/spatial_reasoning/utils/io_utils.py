@@ -5,8 +5,9 @@ import time
 from io import BytesIO
 
 import requests
-from ..data import Cell
 from PIL import Image
+
+from ..data import Cell
 
 
 def download_image(url: str) -> Image.Image:
