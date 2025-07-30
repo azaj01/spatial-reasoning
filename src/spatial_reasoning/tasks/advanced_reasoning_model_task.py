@@ -23,36 +23,7 @@ class AdvancedReasoningModelTask(BaseTask):
     def __init__(self, agent: BaseAgent, **kwargs):
         super().__init__(agent, **kwargs)
         self.prompt: GridCellDetectionPrompt = GridCellDetectionPrompt()
-        # Tool use -and- foundation model agents
         self.vanilla_agent: VanillaReasoningModelTask = VanillaReasoningModelTask(agent, **kwargs)
-        self.vision_agent: VisionModelTask = VisionModelTask(agent, **kwargs)
-    
-    def run_agents_parallel(self, **kwargs) -> Tuple[dict, dict]:
-        """
-        Run both vision and vanilla agents in parallel and return both outputs.
-        
-        Returns:
-            tuple: (vision_output, vanilla_output)
-        """
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            # Submit both tasks
-            future_to_agent = {
-                executor.submit(self.vision_agent.execute, **kwargs): 'vision',
-                executor.submit(self.vanilla_agent.execute, **kwargs): 'vanilla'
-            }
-            
-            results = {}
-            # Collect results as they complete
-            for future in as_completed(future_to_agent):
-                agent_type = future_to_agent[future]
-                try:
-                    result = future.result()
-                    results[agent_type] = result
-                except Exception as e:
-                    print(f"Agent {agent_type} generated an exception: {e}")
-                    results[agent_type] = {'error': str(e)}
-            
-        return results.get('vision', {}), results.get('vanilla', {})
     
     def execute(self, **kwargs) -> dict:
         """
@@ -82,21 +53,10 @@ class AdvancedReasoningModelTask(BaseTask):
             overlay_image, image, origin_coordinates, is_terminal_state = self.run_single_crop_process(image.copy(), object_of_interest, origin_coordinates, _grid_size, top_k, confidence_threshold, convergence_threshold)
             
             overlay_samples.append(overlay_image)
-            # Now, if the model doesn't think it can find the object in the image, we should probably just return the original image
-            # if is_terminal_state and not image:
-            #     return {
-            #         'bboxs': [],
-            #         'overlay_images': overlay_samples,
-            #         'crop_origin': origin_coordinates
-            #     }
             
         kwargs['image'] = image
-        # Run both agents in parallel
-        vision_out, vanilla_out = self.run_agents_parallel(**kwargs)
+        out = self.vanilla_agent.execute(**kwargs)
 
-        # output from vision agent is preferred if the number of predictions matches between the two agents
-        # out = vision_out if len(vision_out['bboxs']) == len(vanilla_out['bboxs']) else vanilla_out
-        out = vanilla_out
         # also upload the final image to the output
         cropped_visualized_image = BaseDataset.visualize_image(
             image,
