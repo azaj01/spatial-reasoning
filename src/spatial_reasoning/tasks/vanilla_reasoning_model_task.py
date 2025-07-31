@@ -1,11 +1,11 @@
 import random
 
+from PIL import Image
+
 from ..agents import BaseAgent
 from ..data import Cell
-from PIL import Image
 from ..prompts import SimpleDetectionPrompt
 from ..utils.io_utils import parse_detection_output
-
 from .base_task import BaseTask
 
 
@@ -34,17 +34,17 @@ class VanillaReasoningModelTask(BaseTask):
         raw_response = self.agent.safe_chat(messages, reasoning={"effort": "medium", "summary": "auto"})
         structured_response = parse_detection_output(raw_response['output'])
 
-        # TODO: remove this. Keep only for debugging purposes.
+        # DEBUGGING PURPOSES ONLY TO SEE WHAT THE REASONING MODEL IS SAYING
         if "reasoning" in raw_response:
             for reasoning in raw_response["reasoning"]:
                 print(reasoning.text)
         print("--------------------------------")
         print(raw_response["output"])
         
-        if not structured_response or "bbox" not in structured_response:
+        if not structured_response or "bbox" not in structured_response or len(structured_response['bbox']) == 0:
             return {
                 "bboxs": [],
-                "overlay_images": []
+                "overlay_images": [None]
             }
         
         bboxs: list[Cell] = []

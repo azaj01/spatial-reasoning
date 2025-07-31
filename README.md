@@ -18,17 +18,6 @@ A powerful Python package for object detection using advanced vision and reasoni
   ![Internal Workings](assets/internal_workings.png)
   *How the advanced reasoning model works under the hood - using grid cells for precise localization*
 
-- **Handles Complex Scenarios**: Excels at out-of-distribution and challenging detection tasks
-  
-  ![Hard Example](assets/hard_example.png)
-  *Detecting objects in challenging conditions where traditional models fail*
-  
-  ![Hard Example 2](assets/hard_example_2.png)
-  *Complex query: Finding specific objects with nuanced requirements*
-  
-  ![Hard Example 2 Reasoning Process](assets/hard_example_2_reasoning_process.png)
-  *Step-by-step breakdown of how the advanced reasoning model solves complex detection tasks*
-
 - **Simple API**: One function for all your detection needs
 - **CLI Support**: Command-line interface for quick testing
 

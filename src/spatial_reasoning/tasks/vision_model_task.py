@@ -87,19 +87,8 @@ class VisionModelTask(BaseTask):
         )[0]
         
         if len(results["boxes"]) == 0:
-            print(f"No objects found for prompt: {prompt}. Trying again with lower threshold.")
+            print(f"No objects found for prompt: {prompt}.")
             return []
-            with torch.no_grad():
-                outputs = self.model(**inputs)
-            results = self.processor.post_process_grounded_object_detection(
-                outputs,
-                inputs['input_ids'],
-                box_threshold=0.2,
-                text_threshold=0.25,
-                target_sizes=[(image.height, image.width)]
-            )[0]
-            if len(results["boxes"]) == 0:
-                return []
 
         # Get the best box (highest score)
         detections = []

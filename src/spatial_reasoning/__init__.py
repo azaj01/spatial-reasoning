@@ -48,14 +48,16 @@ __email__ = "qasim31wani@gmail.com"
 # Import key classes for advanced usage
 from .agents import AgentFactory, BaseAgent, GeminiAgent, OpenAIAgent
 # Import main API function for easy access
-from .api import detect
+from .api import detect, detect_stream
 from .data import BaseDataset, Cell
 from .tasks import (AdvancedReasoningModelTask, BaseTask, GeminiTask,
-                    MultiAdvancedReasoningModelTask, VanillaReasoningModelTask,
-                    VisionModelTask)
+                    MultiAdvancedReasoningModelTask,
+                    StreamAdvancedReasoningModelTask,
+                    VanillaReasoningModelTask, VisionModelTask)
 
 __all__ = [
     "detect",
+    "detect_stream",
     "AgentFactory",
     "BaseAgent",
     "GeminiAgent",
@@ -67,5 +69,6 @@ __all__ = [
     "GeminiTask",
     "MultiAdvancedReasoningModelTask",
     "VanillaReasoningModelTask",
+    "StreamAdvancedReasoningModelTask",
     "VisionModelTask",
 ]

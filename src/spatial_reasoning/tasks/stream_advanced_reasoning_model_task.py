@@ -1,6 +1,8 @@
+import base64
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from io import BytesIO
 from itertools import product
-from typing import Dict, Tuple, Union
+from typing import Dict, Generator, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -15,9 +17,9 @@ from .base_task import BaseTask
 from .vanilla_reasoning_model_task import VanillaReasoningModelTask
 
 
-class AdvancedReasoningModelTask(BaseTask):
+class StreamAdvancedReasoningModelTask(BaseTask):
     """
-    Agent that utilizes CV tools and FMs
+    Agent that utilizes CV tools and FMs with streaming support
     """
     def __init__(self, agent: BaseAgent, **kwargs):
         super().__init__(agent, **kwargs)
@@ -26,52 +28,126 @@ class AdvancedReasoningModelTask(BaseTask):
     
     def execute(self, **kwargs) -> dict:
         """
-        Run reasoning model
-        Arguments:
-            image: Image.Image
-            prompt: str
+        Run reasoning model (non-streaming version for backward compatibility)
         """
-        image: Image.Image = kwargs['image']
+        # Collect all results from the generator
+        results = list(self.execute_streaming(**kwargs))
+        # Return the final result
+        return results[-1] if results else {}
+    
+    def execute_streaming(self, **kwargs) -> Generator[dict, None, None]:
+        """
+        Run reasoning model with streaming support
+        Yields intermediate results as they become available
+        """
+        original_image: Image.Image = kwargs['image']
         object_of_interest: str = kwargs['prompt']
-        grid_size = kwargs.get("grid_size", (4, 3))  # num_rows x num_cols
+        grid_size = kwargs.get("grid_size", (4, 3))
         max_crops = kwargs.get('max_crops', 4)
-        top_k = kwargs.get("top_k", -1)  # TODO: give user the flexibility if they want to detect one object or multiple
+        top_k = kwargs.get("top_k", -1)
         confidence_threshold = kwargs.get("confidence_threshold", 0.5)
         convergence_threshold = kwargs.get("convergence_threshold", 0.6)
 
         origin_coordinates = (0, 0)
-
         overlay_samples = []
         is_terminal_state = False
+        crop_iteration = 0
+        # Yield the very first image
+        yield {
+            'type': 'intermediate',
+            'iteration': 0,
+            'overlay_image': self._image_to_base64(self.overlay_grid_on_image(original_image, grid_size[0], grid_size[1])[0]),
+            'is_terminal': is_terminal_state,
+            'total_crops': 0,
+            'max_crops': max_crops,
+            'message': f'Initializing grid. May take up to 2 minutes...'
+        }
+        
+        image = original_image.copy()
         while not is_terminal_state and len(overlay_samples) < max_crops:
-            # TODO: convert this into a streaming application
-            if image.width < 512 and image.height < 512 and len(overlay_samples) > 0:  # initial state, pick the default grid size
+            crop_iteration += 1
+            
+            if image.width < 512 and image.height < 512 and len(overlay_samples) > 0:
                 _grid_size = (3, 2)
             else:
                 _grid_size = grid_size
-            overlay_image, image, origin_coordinates, is_terminal_state = self.run_single_crop_process(image.copy(), object_of_interest, origin_coordinates, _grid_size, top_k, confidence_threshold, convergence_threshold)
+                
+            # Run single crop process
+            overlay_image, image, origin_coordinates, is_terminal_state = self.run_single_crop_process(
+                image.copy(), 
+                object_of_interest, 
+                origin_coordinates, 
+                _grid_size, 
+                top_k, 
+                confidence_threshold, 
+                convergence_threshold
+            )
             
             overlay_samples.append(overlay_image)
             
+            # Yield intermediate result
+            yield {
+                'type': 'intermediate',
+                'iteration': crop_iteration,
+                'overlay_image': self._image_to_base64(self.overlay_grid_on_image(image, _grid_size[0], _grid_size[1])[0]),
+                'is_terminal': is_terminal_state,
+                'total_crops': len(overlay_samples),
+                'max_crops': max_crops,
+                'message': f'Processing crop {crop_iteration}/{max_crops}...'
+            }
+        
+        # Final detection on the cropped image
         kwargs['image'] = image
         out = self.vanilla_agent.execute(**kwargs)
 
-        # also upload the final image to the output
+        # Display final cropped model prediction
         cropped_visualized_image = BaseDataset.visualize_image(
             image,
             [cell.to_tuple() for cell in out['bboxs']],
             return_image=True
         )
+
         overlay_samples.append(cropped_visualized_image)
+
         # Restore to original coordinates
         restored_bboxs = get_original_bounding_box(
             cropped_bounding_boxs=out['bboxs'],
             crop_origin=origin_coordinates,
         )
-        out['bboxs'] = restored_bboxs
-        out['overlay_images'] = overlay_samples
-        return out
-
+        
+        # Create final visualization
+        visualized_image = BaseDataset.visualize_image(
+            original_image,
+            [cell.to_tuple() for cell in restored_bboxs],
+            return_image=True
+        )
+        
+        # Yield final result
+        final_result = {
+            'type': 'final',
+            'bboxs': restored_bboxs,
+            'overlay_images': [self._image_to_base64(img) for img in overlay_samples],
+            'final_image': self._image_to_base64(visualized_image),
+            'total_iterations': crop_iteration,
+            'message': 'Detection complete!'
+        }
+        
+        # Include any other data from the vanilla agent output
+        for key, value in out.items():
+            if key not in ['bboxs', 'overlay_images']:
+                final_result[key] = value
+                
+        yield final_result
+    
+    @staticmethod
+    def _image_to_base64(image: Image.Image) -> str:
+        """Convert PIL Image to base64 string"""
+        buffered = BytesIO()
+        image.save(buffered, format="PNG")
+        return base64.b64encode(buffered.getvalue()).decode()
+    
+    # ... rest of the methods remain the same ...
+    
     @staticmethod
     def is_terminal_state(source_image: Image.Image,target_image: Image.Image, convergence_threshold: float) -> bool:
         """
@@ -120,8 +196,9 @@ class AdvancedReasoningModelTask(BaseTask):
                 print(reasoning.text)
         print("--------------------------------")
         print(raw_response["output"])
+
         try:
-            cropped_image_data: dict = AdvancedReasoningModelTask.crop_image(
+            cropped_image_data: dict = StreamAdvancedReasoningModelTask.crop_image(
                 image, structured_response, cell_lookup, top_k=top_k, confidence_threshold=confidence_threshold
             )
             assert cropped_image_data is not None, "Cropped image data is None"

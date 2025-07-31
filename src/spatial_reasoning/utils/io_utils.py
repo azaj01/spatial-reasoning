@@ -65,7 +65,7 @@ def parse_detection_output(output_text):
 def get_original_bounding_box(
     cropped_bounding_boxs: list[Cell],
     crop_origin: tuple[int, int],
-) -> Cell:
+) -> list[Cell]:
     """
     Map a bounding box from a cropped image back to the original image.
 

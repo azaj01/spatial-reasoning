@@ -1,7 +1,7 @@
 import json
 import os
 import time
-from typing import Dict, List, Optional, Union
+from typing import Dict, Generator, List, Optional, Union
 
 from dotenv import load_dotenv
 from PIL import Image
@@ -9,6 +9,7 @@ from PIL import Image
 from .agents.agent_factory import AgentFactory
 from .data import BaseDataset, Cell
 from .tasks import (AdvancedReasoningModelTask, GeminiTask,
+                    StreamAdvancedReasoningModelTask,
                     VanillaReasoningModelTask, VisionModelTask)
 from .utils.io_utils import (convert_list_of_cells_to_list_of_bboxes,
                              download_image, get_timestamp)
@@ -49,6 +50,9 @@ class OptimizedDetectionAPI:
             self._tasks['advanced_reasoning_model'] = AdvancedReasoningModelTask(
                 self._agents['openai']
             )
+            self._tasks['stream_advanced_reasoning_model'] = StreamAdvancedReasoningModelTask(
+                self._agents['openai']
+            )
             self._tasks['vanilla_reasoning_model'] = VanillaReasoningModelTask(
                 self._agents['openai']
             )
@@ -58,13 +62,103 @@ class OptimizedDetectionAPI:
             self._tasks['gemini'] = GeminiTask(
                 self._agents['gemini']
             )
-            # Multi advanced reasoning model task is not fully implemented yet
-            # self._tasks['multi_advanced_reasoning_model'] = MultiAdvancedReasoningModelTask(
-            #     self._agents['openai']
-            # )
             
             self._initialized = True
             print("Initialization complete!")
+    
+    def detect_stream(
+        self,
+        image_path: str,
+        object_of_interest: str,
+        task_type: str = "stream_advanced_reasoning_model",
+        task_kwargs: Optional[Dict] = None
+    ) -> Generator[Dict, None, None]:
+        """
+        Streaming detection function that yields intermediate results.
+        Currently only supports 'stream_advanced_reasoning_model' task type.
+        
+        Args:
+            image_path (str): Path to the image file or URL
+            object_of_interest (str): Description of what to detect in the image
+            task_type (str): Must be "stream_advanced_reasoning_model" for streaming
+            task_kwargs (dict, optional): Additional parameters for the task
+        
+        Yields:
+            dict: Intermediate results with 'type' field indicating:
+                - 'intermediate': Intermediate crop results
+                - 'final': Final detection results
+                - 'error': Error occurred during processing
+        """
+        
+        # Initialize agents and tasks if not already done
+        self._initialize_if_needed()
+        
+        # Currently only support streaming for stream_advanced_reasoning_model
+        if task_type != "stream_advanced_reasoning_model":
+            yield {
+                'type': 'error',
+                'error': f"Streaming not supported for task type: {task_type}"
+            }
+            return
+        
+        # Initialize task_kwargs if not provided
+        if task_kwargs is None:
+            task_kwargs = {}
+        
+        try:
+            # Start timing
+            start_time = time.perf_counter()
+            
+            # Load the image
+            print(f"Loading image from: {image_path}")
+            if image_path.startswith("http"):
+                image = download_image(image_path)
+            else:
+                image = Image.open(image_path).convert("RGB")
+            
+            print(f"Image loaded successfully. Size: {image.size}")
+            
+            # Get the streaming task
+            task = self._tasks['stream_advanced_reasoning_model']
+            
+            # Execute the detection task with streaming
+            print(f"Executing streaming detection for object: '{object_of_interest}'")
+            print(f"Task kwargs: {task_kwargs}")
+            
+            # Yield each result from the streaming task
+            for result in task.execute_streaming(
+                image=image,
+                prompt=object_of_interest,
+                **task_kwargs
+            ):
+                # Add timing information
+                result['elapsed_time'] = time.perf_counter() - start_time
+                
+                # For final results, add additional processing
+                if result['type'] == 'final':
+                    # Convert Cell objects to bounding boxes if needed
+                    if 'bboxs' in result and len(result['bboxs']) > 0 and isinstance(result['bboxs'][0], Cell):
+                        print(f"Converting {len(result['bboxs'])} cells to bboxes")
+                        result['bboxs'] = convert_list_of_cells_to_list_of_bboxes(result['bboxs'])
+                    
+                    # Add metadata
+                    result['object_of_interest'] = object_of_interest
+                    result['task_type'] = task_type
+                    result['task_kwargs'] = task_kwargs
+                    result['total_time'] = time.perf_counter() - start_time
+                    
+                    print(f"Detection completed in {result['total_time']:.2f} seconds")
+                    print(f"Found {len(result.get('bboxs', []))} bounding boxes")
+                
+                yield result
+                
+        except Exception as e:
+            print(f"Error during streaming detection: {str(e)}")
+            yield {
+                'type': 'error',
+                'error': str(e),
+                'elapsed_time': time.perf_counter() - start_time
+            }
     
     def detect(
         self,
@@ -85,6 +179,7 @@ class OptimizedDetectionAPI:
             object_of_interest (str): Description of what to detect in the image
             task_type (str): Type of detection task to run. Options:
                 - "advanced_reasoning_model"
+                - "stream_advanced_reasoning_model"
                 - "vanilla_reasoning_model"
                 - "vision_model"
                 - "gemini"
@@ -193,7 +288,7 @@ class OptimizedDetectionAPI:
         return result
 
 
-# Create a singleton instance
+# Create a singleton instance. Important to avoid reloading models on every call, burns GPU memory.
 _api_instance = OptimizedDetectionAPI()
 
 
@@ -216,6 +311,7 @@ def detect(
         object_of_interest (str): Description of what to detect in the image
         task_type (str): Type of detection task to run. Options:
             - "advanced_reasoning_model"
+            - "stream_advanced_reasoning_model"
             - "vanilla_reasoning_model"
             - "vision_model"
             - "gemini"
@@ -245,6 +341,36 @@ def detect(
         save_outputs=save_outputs,
         output_folder_path=output_folder_path,
         return_overlay_images=return_overlay_images
+    )
+
+
+def detect_stream(
+    image_path: str,
+    object_of_interest: str,
+    task_type: str = "stream_advanced_reasoning_model",
+    task_kwargs: Optional[Dict] = None
+) -> Generator[Dict, None, None]:
+    """
+    Streaming detection function that yields intermediate results.
+    Currently only supports 'stream_advanced_reasoning_model' task type.
+    
+    Args:
+        image_path (str): Path to the image file or URL
+        object_of_interest (str): Description of what to detect in the image
+        task_type (str): Must be "stream_advanced_reasoning_model" for streaming
+        task_kwargs (dict, optional): Additional parameters for the task
+    
+    Yields:
+        dict: Intermediate results with 'type' field indicating:
+            - 'intermediate': Intermediate crop results
+            - 'final': Final detection results
+            - 'error': Error occurred during processing
+    """
+    return _api_instance.detect_stream(
+        image_path=image_path,
+        object_of_interest=object_of_interest,
+        task_type=task_type,
+        task_kwargs=task_kwargs
     )
 
 
