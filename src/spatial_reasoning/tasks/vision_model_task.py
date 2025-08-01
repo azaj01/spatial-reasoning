@@ -14,6 +14,7 @@ from .base_task import BaseTask
 class VisionModelTask(BaseTask):
     def __init__(self, agent: BaseAgent, **kwargs):
         super().__init__(agent, **kwargs)
+        self.cpu_mode = kwargs.get("cpu_mode", True)  # Critical for Server capabilities
         
         # Suppress the specific warning about meta parameters
         warnings.filterwarnings('ignore', message='copying from a non-meta parameter')
@@ -28,9 +29,12 @@ class VisionModelTask(BaseTask):
         )
         
         # Move model to appropriate device
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and not self.cpu_mode:
             self.model = self.model.cuda()
-        
+        else:
+            print("Using CPU mode")
+            self.model = self.model.cpu()
+
     def execute(self, **kwargs) -> dict:
         """
         Run GroundingDino + SAM
@@ -71,8 +75,10 @@ class VisionModelTask(BaseTask):
         inputs = self.processor(images=image, text=prompt, return_tensors="pt")
         
         # Move inputs to the same device as the model
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and not self.cpu_mode:
             inputs = {k: v.cuda() if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}
+        else:
+            inputs = {k: v.cpu() if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}  # For sanity reasons, explicitly move to CPU
         
         with torch.no_grad():
             outputs = self.model(**inputs)
