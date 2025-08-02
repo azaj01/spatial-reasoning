@@ -15,6 +15,7 @@ from ..prompts import (GridCellDetectionPrompt,
 from ..utils.io_utils import get_original_bounding_box, parse_detection_output
 from .base_task import BaseTask
 from .vanilla_reasoning_model_task import VanillaReasoningModelTask
+from .vision_model_task import VisionModelTask
 
 
 class StreamAdvancedReasoningModelTask(BaseTask):
@@ -25,6 +26,34 @@ class StreamAdvancedReasoningModelTask(BaseTask):
         super().__init__(agent, **kwargs)
         self.prompt: GridCellDetectionPrompt = GridCellDetectionPrompt()
         self.vanilla_agent: VanillaReasoningModelTask = VanillaReasoningModelTask(agent, **kwargs)
+        self.vision_agent: VisionModelTask = VisionModelTask(agent, **kwargs)
+    
+    def run_agents_parallel(self, **kwargs) -> Tuple[dict, dict]:
+        """
+        Run both vision and vanilla agents in parallel and return both outputs.
+        
+        Returns:
+            tuple: (vision_output, vanilla_output)
+        """
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            # Submit both tasks
+            future_to_agent = {
+                executor.submit(self.vision_agent.execute, **kwargs): 'vision',
+                executor.submit(self.vanilla_agent.execute, **kwargs): 'vanilla'
+            }
+            
+            results = {}
+            # Collect results as they complete
+            for future in as_completed(future_to_agent):
+                agent_type = future_to_agent[future]
+                try:
+                    result = future.result()
+                    results[agent_type] = result
+                except Exception as e:
+                    print(f"Agent {agent_type} generated an exception: {e}")
+                    results[agent_type] = {'error': str(e)}
+            
+        return results.get('vision', {}), results.get('vanilla', {})
     
     def execute(self, **kwargs) -> dict:
         """
@@ -98,23 +127,36 @@ class StreamAdvancedReasoningModelTask(BaseTask):
         
         # Final detection on the cropped image
         kwargs['image'] = image
-        out = self.vanilla_agent.execute(**kwargs)
-
+        kwargs['confidence_threshold'] = 0.9
+        vision_out, vanilla_out = self.run_agents_parallel(**kwargs)
+        out = vanilla_out if vanilla_out['bboxs'] else vision_out
+            
         # Display final cropped model prediction
         cropped_visualized_image = BaseDataset.visualize_image(
             image,
             [cell.to_tuple() for cell in out['bboxs']],
             return_image=True
         )
+        
+        # Yield the cropped visualization
+        yield {
+            'type': 'intermediate',
+            'iteration': crop_iteration + 1,
+            'overlay_image': self._image_to_base64(cropped_visualized_image),
+            'is_terminal': True,
+            'total_crops': len(overlay_samples) + 1,
+            'max_crops': max_crops,
+            'message': 'Model detection complete!'
+        }
 
-        overlay_samples.append(cropped_visualized_image)
+        # overlay_samples.append(cropped_visualized_image)
 
         # Restore to original coordinates
         restored_bboxs = get_original_bounding_box(
             cropped_bounding_boxs=out['bboxs'],
             crop_origin=origin_coordinates,
         )
-        
+
         # Create final visualization
         visualized_image = BaseDataset.visualize_image(
             original_image,
@@ -122,6 +164,7 @@ class StreamAdvancedReasoningModelTask(BaseTask):
             return_image=True
         )
         
+
         # Yield final result
         final_result = {
             'type': 'final',
@@ -131,11 +174,11 @@ class StreamAdvancedReasoningModelTask(BaseTask):
             'total_iterations': crop_iteration,
             'message': 'Detection complete!'
         }
-        
+
         # Include any other data from the vanilla agent output
-        for key, value in out.items():
-            if key not in ['bboxs', 'overlay_images']:
-                final_result[key] = value
+        # for key, value in out.items():
+        #     if key not in ['bboxs', 'overlay_images']:
+        #         final_result[key] = value
                 
         yield final_result
     

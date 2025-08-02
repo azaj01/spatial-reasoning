@@ -14,7 +14,7 @@ from .base_task import BaseTask
 class VisionModelTask(BaseTask):
     def __init__(self, agent: BaseAgent, **kwargs):
         super().__init__(agent, **kwargs)
-        self.cpu_mode = kwargs.get("cpu_mode", True)  # Critical for Server capabilities
+        self.cpu_mode = kwargs.get("cpu_mode", False)
         
         # Suppress the specific warning about meta parameters
         warnings.filterwarnings('ignore', message='copying from a non-meta parameter')
@@ -87,7 +87,7 @@ class VisionModelTask(BaseTask):
         results = self.processor.post_process_grounded_object_detection(
             outputs,
             inputs['input_ids'],
-            box_threshold=0.15,
+            box_threshold=0.1,
             text_threshold=0.25,
             target_sizes=[(image.height, image.width)]
         )[0]

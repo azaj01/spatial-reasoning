@@ -25,6 +25,8 @@ class VanillaReasoningModelTask(BaseTask):
         object_of_interest: str = kwargs['prompt']
         confidence_threshold: float = kwargs.get("confidence_threshold", 0.65)  # Treated as the NMS threshold
         multiple_predictions: bool = kwargs.get('multiple_predictions', False)
+        
+        print(f"Vanilla reasoning model task. Confidence threshold: {confidence_threshold}")
 
         messages = [
             self.agent.create_text_message("system", self.prompt.get_system_prompt()),
