@@ -129,11 +129,23 @@ class StreamAdvancedReasoningModelTask(BaseTask):
 
         # Final detection on the cropped image
         kwargs['image'] = image
-        kwargs['confidence_threshold'] = 0.88
+        kwargs['confidence_threshold'] = 0.85
         kwargs['grid_size'] = _grid_size
         vision_out, vanilla_out = self.run_agents_parallel(**kwargs)
 
         out = vanilla_out if vanilla_out['bboxs'] else vision_out
+        
+        # Now, if both vision and vanilla agents return no detections, we need to yeild no detections
+        if 'bboxs' not in out or len(out['bboxs']) == 0:
+            yield {
+                'type': 'final',
+                'bboxs': [],
+                'overlay_images': [None] * len(overlay_samples),
+                'final_image': self._image_to_base64(image),
+                'total_iterations': crop_iteration + 1,
+                'message': 'No detections found'
+            }
+            return
 
         # Display final cropped model prediction
         cropped_visualized_image = BaseDataset.visualize_image(
