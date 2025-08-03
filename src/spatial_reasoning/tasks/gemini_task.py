@@ -33,6 +33,12 @@ class GeminiTask(BaseTask):
         ]
         
         raw_response = self.agent.safe_chat(messages)
+        
+        # DEBUGGING PURPOSES ONLY TO SEE WHAT THE REASONING MODEL IS SAYING
+        print("----------------Gemini Task LOGGING REASONING ----------------")
+        print(raw_response['output'])
+        print("----------------Gemini Task LOGGING REASONING ----------------")
+
         try:
             structured_response = parse_detection_output(raw_response['output'])
             bounding_boxes = GeminiTask.extract_bounding_boxes(structured_response, image, normalization_factor)
