@@ -5,12 +5,12 @@ from dataclasses import dataclass
 from typing import Optional, Tuple
 
 import numpy as np
-from ..agents import BaseAgent
 from PIL import Image
-from ..prompts import SimplifiedGridCellDetectionPrompt
 from scipy.ndimage import label
-from ..utils.io_utils import get_original_bounding_box, parse_detection_output
 
+from ..agents import BaseAgent
+from ..prompts import SimplifiedGridCellDetectionPrompt
+from ..utils.io_utils import get_original_bounding_box, parse_detection_output
 from .advanced_reasoning_model_task import AdvancedReasoningModelTask
 from .base_task import BaseTask
 from .vanilla_reasoning_model_task import VanillaReasoningModelTask
@@ -36,7 +36,7 @@ class MultiAdvancedReasoningModelTask(BaseTask):
         super().__init__(agent, **kwargs)
         self.prompt: SimplifiedGridCellDetectionPrompt = SimplifiedGridCellDetectionPrompt()
         # Tool use -and- foundation model agents
-        self.vanilla_agent: VanillaReasoningModelTask = VanillaReasoningModelTask(agent, **kwargs)
+        self.vanilla_agent: VanillaReasoningModelTask = VanillaReasoningModelTask(agent, prompt_type="advanced", **kwargs)
         self.vision_agent: VisionModelTask = VisionModelTask(agent, **kwargs)
     
     def run_agents_parallel(self, **kwargs) -> Tuple[dict, dict]:
@@ -171,7 +171,6 @@ class MultiAdvancedReasoningModelTask(BaseTask):
                 continue
             
             # Process this image
-            print(f"Processing node: {node}")
             out = self.run_single_crop_process(
                 node.image,
                 object_of_interest,

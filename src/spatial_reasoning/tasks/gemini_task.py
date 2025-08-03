@@ -1,11 +1,11 @@
 from typing import List
 
+from PIL import Image
+
 from ..agents import BaseAgent
 from ..data import Cell
-from PIL import Image
 from ..prompts import GeminiPrompt
 from ..utils.io_utils import parse_detection_output
-
 from .base_task import BaseTask
 
 

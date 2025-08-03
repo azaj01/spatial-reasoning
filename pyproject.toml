@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spatial-reasoning"
-version = "0.1.3"
+version = "0.1.4"
 description = "A PyPI package for object detection using advanced vision models"
 readme = "README.md"
 authors = [

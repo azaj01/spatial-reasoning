@@ -42,7 +42,7 @@ class OptimizedDetectionAPI:
             
             # Initialize Gemini agent
             self._agents['gemini'] = AgentFactory.create_agent(
-                model="gemini-2.5-flash", 
+                model="gemini-2.5-flash",
                 platform_name="gemini"
             )
             
@@ -54,7 +54,8 @@ class OptimizedDetectionAPI:
                 self._agents['openai']
             )
             self._tasks['vanilla_reasoning_model'] = VanillaReasoningModelTask(
-                self._agents['openai']
+                self._agents['openai'],
+                prompt_type="vanilla"  # NOTE: Change to "advanced" if you'd like the model to incorporate a visual grid (Set-of-Marks style) as part of reasoning
             )
             self._tasks['vision_model'] = VisionModelTask(
                 self._agents['openai']
