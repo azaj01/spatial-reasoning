@@ -139,25 +139,22 @@ class BaseTask(ABC):
         padded_height = (content_box[3] - content_box[1]) + 2 * pad
         
         # Calculate ideal crop box
+        ideal_left = content_center[0] - padded_width / 2
+        ideal_top = content_center[1] - padded_height / 2
+        ideal_right = content_center[0] + padded_width / 2
+        ideal_bottom = content_center[1] + padded_height / 2
+        
+        # Constrain crop box to image boundaries
         crop_box = (
-            int(max(0, content_center[0] - padded_width / 2)),
-            int(max(0, content_center[1] - padded_height / 2)),
-            int(min(pil_image.width, content_center[0] + padded_width / 2)),
-            int(min(pil_image.height, content_center[1] + padded_height / 2))
+            int(max(0, ideal_left)),
+            int(max(0, ideal_top)),
+            int(min(pil_image.width, ideal_right)),
+            int(min(pil_image.height, ideal_bottom))
         )
         
-        # Crop the image
+        # Crop the image without padding
         cropped = pil_image.crop(crop_box)
         actual_size = (crop_box[2] - crop_box[0], crop_box[3] - crop_box[1])
-        
-        # If crop was constrained by image boundaries, pad with black
-        if actual_size[0] < padded_width or actual_size[1] < padded_height:
-            canvas = Image.new('RGB', (int(padded_width), int(padded_height)), 'black')
-            paste_pos = ((int(padded_width) - actual_size[0]) // 2,
-                        (int(padded_height) - actual_size[1]) // 2)
-            canvas.paste(cropped, paste_pos)
-            cropped = canvas
-            actual_size = (int(padded_width), int(padded_height))
         
         return {
             "original_dims": pil_image.size,

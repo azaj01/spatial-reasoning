@@ -115,7 +115,7 @@ class StreamAdvancedReasoningModelTask(BaseTask):
 
             # Yield intermediate result
             message = f'Processing crop {crop_iteration}/{max_crops}...'
-            if crop_iteration == max_crops:
+            if crop_iteration == max_crops or is_terminal_state:
                 message = 'Starting final model detection (ETA ~20 seconds)'
             yield {
                 'type': 'intermediate',
@@ -129,7 +129,7 @@ class StreamAdvancedReasoningModelTask(BaseTask):
 
         # Final detection on the cropped image
         kwargs['image'] = image
-        kwargs['confidence_threshold'] = 0.85
+        kwargs['confidence_threshold'] = 0.8
         kwargs['grid_size'] = _grid_size
         vision_out, vanilla_out = self.run_agents_parallel(**kwargs)
 

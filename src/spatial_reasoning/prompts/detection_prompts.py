@@ -502,132 +502,72 @@ class BboxDetectionWithGridCellPrompt(BasePrompt):
         table = self._require(kwargs, "cell_lookup")
         geo = self._make_geo_from_table(table, int(rows), int(cols), int(W), int(H))
         return geo, str(obj)
-
+    
     def get_system_prompt(self, **kwargs) -> str:
-        """Get the system prompt for bbox detection with grid."""
         geo, obj = self._extract_geo(kwargs)
-        
-        grid_viz = self._format_grid_visualization(geo)
-        cell_table = self._format_cell_table(geo)
+        rows, cols, W, H = geo['rows'], geo['cols'], geo['W'], geo['H']
 
-        return f"""You are a grid-based visual detection model. YOU MUST use the grid overlay to locate objects.
+        # Compact, deterministic mapping (inclusive integer pixel ranges)
+        mapping_lines = []
+        for cid in sorted(geo['cell_tuples'].keys()):
+            x, y, w, h = geo['cell_tuples'][cid]
+            x0, x1 = x, x + w - 1
+            y0, y1 = y, y + h - 1
+            mapping_lines.append(f"{cid}: x[{x0}-{x1}], y[{y0}-{y1}]")
+        mapping = "\n".join(mapping_lines)
 
-**CRITICAL METHODOLOGY - YOU MUST FOLLOW THIS PROCESS:**
-1. FIRST identify and explicitly state which grid cells contain the target object
-2. Look up those cell numbers in the reference table to get pixel ranges
-3. ONLY THEN determine exact boundaries within those cells
-4. Never skip the grid analysis - it is MANDATORY
+        return f"""You are a visual detector. Compute internally; do NOT describe steps.
 
-**Grid Information:**
-- Image size: {geo['W']}×{geo['H']} pixels
-- Grid: {geo['rows']} rows × {geo['cols']} columns = {geo['total']} cells
+    Return ONLY a Python dict literal with EXACT keys and structure:
+    {{
+    "confidence": [conf1, conf2, ...],
+    "bbox": [(x1, y1, w1, h1), (x2, y2, w2, h2), ...]
+    }}
 
-**Grid Layout:**
-{grid_viz}
+    Image: {W}×{H}px. Grid: {rows}×{cols}.
+    Cell reference (inclusive pixel ranges):
+    {mapping}
 
-**Cell Reference Table:**
-{cell_table}
+    Internal checklist (do NOT output):
+    1) Identify all visible "{obj}" solely from pixels (ignore priors/pattern symmetry).
+    2) For each instance, determine left/right/top/bottom on visible edges.
+    3) Ensure cell-consistency: cells touched by the box form one contiguous rectangle in grid indices.
+    4) Convert to integers: left,top = floor; right,bottom = ceil; w = right-left+1; h = bottom-top+1.
+    5) Clamp to image bounds (0..{W-1}, 0..{H-1}); enforce w≥1, h≥1.
+    6) If an edge is ambiguous within a cell, snap to the nearest visible edge; if still uncertain, snap to the nearest cell boundary.
+    7) Confidence (0–100): start at 100; subtract 10 for each missing clear cue among {{left/right/top/bottom edge, interior features consistent with "{obj}"}}. If <60, omit that box.
+    8) Reject pattern completion: never add repeated instances unless clearly visible.
+    
+    **NOTE:** If no clear "{obj}" visible, return {{"confidence": [], "bbox": []}}.
 
-**Example Reasoning Process (YOU MUST REASON LIKE THIS):**
-
-Example 1 - Detecting an eye:
-"Looking at the grid overlay, I can see the right eye spans cells 8 and 9.
-Cell 8 covers x:[200-299], y:[100-199]
-Cell 9 covers x:[300-399], y:[100-199]
-The eye starts at x=245 in cell 8 and extends to x=340 in cell 9.
-The vertical bounds are y=130 to y=170 within the cell ranges.
-Therefore: bbox = (245, 130, 95, 40), confidence = 95"
-
-Example 2 - Detecting a complex object:
-"Examining the grid, the object is located in cells 23, 24, 31, and 32.
-Cell 23: x:[300-399], y:[300-399]
-Cell 24: x:[400-499], y:[300-399]
-Cell 31: x:[300-399], y:[400-499]
-Cell 32: x:[400-499], y:[400-499]
-The object starts at x=320 in cell 23 and extend to x=480 in cell 24.
-Vertically, it spans from y=380 in cells 23-24 to y=420 in cells 31-32.
-Therefore: bbox = (320, 380, 160, 40), confidence = 90"
-
-**Your Task:**
-Detect every instance of "{obj}" using the grid-based process above.
-
-**Output Format:**
-Return a Python dict literal (NOT JSON) with this exact structure:
-{{
-  "confidence": [conf1, conf2, ...],
-  "bbox": [(x1, y1, w1, h1), (x2, y2, w2, h2), ...]
-}}
-Each bbox represents one physical {obj}. Lists must have matching lengths.
-
-**Detection Process:**
-
-1. **Grid Cell Identification (MANDATORY):**
-   - Scan grid systematically
-   - State explicitly: "I see {obj} in cells X, Y, Z"
-   - List ALL cells the object touches
-
-2. **Cell Lookup (MANDATORY):**
-   - State the pixel ranges for each identified cell
-   - Example: "Cell 15 covers x:[300-399], y:[200-299]"
-
-3. **Boundary Determination:**
-   - Find exact object edges WITHIN the cell ranges
-   - x = leftmost object pixel
-   - y = topmost object pixel
-   - width = rightmost - leftmost + 1
-   - height = bottommost - topmost + 1
-
-4. **Quality Checks:**
-   ✓ Did I identify grid cells first?
-   ✓ Did I look up cell pixel ranges?
-   ✓ Are bounds within [0,{geo['W']-1}] × [0,{geo['H']-1}]?
-   ✓ Complete object captured?
-
-**Confidence Scoring:**
-- 90-100: Clear boundaries, minimal occlusion
-- 80-89: Slight edge uncertainty
-- 70-79: Partial occlusion
-- <70: Significant uncertainty
-
-**REMEMBER:**
-- The red grid lines and numbers are reference markers, not part of objects
-- You MUST state grid cells before determining coordinates
-- If you don't mention grid cells, your analysis is incomplete"""
-
+    Output policy (MANDATORY):
+    - No prose, no explanations, no extra keys—ONLY the dict above.
+    """
 
     def get_user_prompt(self, **kwargs) -> str:
-        """Get the user prompt for bbox detection."""
         geo, obj = self._extract_geo(kwargs)
+        rows, cols, W, H = geo['rows'], geo['cols'], geo['W'], geo['H']
 
-        return f"""Find all instances of "{obj}" using the MANDATORY grid-based process.
+        mapping_lines = []
+        for cid in sorted(geo['cell_tuples'].keys()):
+            x, y, w, h = geo['cell_tuples'][cid]
+            x0, x1 = x, x + w - 1
+            y0, y1 = y, y + h - 1
+            mapping_lines.append(f"{cid}: x[{x0}-{x1}], y[{y0}-{y1}]")
+        mapping = "\n".join(mapping_lines)
 
-**Grid Reference:**
-- {geo['rows']}×{geo['cols']} grid overlaid on {geo['W']}×{geo['H']} pixel image
-- Red grid lines and numbers are for reference only
+        return f"""Detect all instances of "{obj}" in a {W}×{H}px image with a {rows}×{cols} grid.
 
-**REQUIRED ANALYSIS STEPS:**
-1. State which grid cells contain each {obj}
-2. Look up pixel ranges for those cells
-3. Determine exact boundaries within the cells
+    Cell reference (inclusive):
+    {mapping}
 
-**Example of REQUIRED reasoning format:**
-"I'm examining the grid to find {obj}. 
-I can see the first {obj} in cells 12 and 13.
-Cell 12 covers x:[200-299], y:[200-299]
-Cell 13 covers x:[300-399], y:[200-299]
-The {obj} starts at x=250 in cell 12 and extends to x=350 in cell 13.
-Vertically, it spans y=220 to y=280.
-Therefore: bbox = (250, 220, 100, 60)"
+    Return ONLY:
+    {{
+    "confidence": [score1, score2, ...],
+    "bbox": [(x, y, w, h), (x, y, w, h), ...]
+    }}
+    """
 
-**Your response MUST include this reasoning BEFORE the final output.**
-
-Return results as:
-{{
-  "confidence": [score1, score2, ...],
-  "bbox": [(x1, y1, w1, h1), ...]
-}}
-
-Begin by stating: "I will use the grid overlay to locate all {obj}..." """
 
     def get_required_parameters(self) -> Dict[str, str]:
         return {

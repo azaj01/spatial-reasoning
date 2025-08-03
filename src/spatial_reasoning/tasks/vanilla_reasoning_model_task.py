@@ -100,6 +100,6 @@ class VanillaReasoningModelTask(BaseTask):
             }
         else:
             return {
-                "bboxs": [bboxs[0]],
+                "bboxs": [bboxs[0]] if bboxs else [],
                 "overlay_images": [None]
             }
