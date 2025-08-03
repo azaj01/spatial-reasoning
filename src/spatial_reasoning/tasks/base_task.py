@@ -93,65 +93,76 @@ class BaseTask(ABC):
         return out, table
 
     @staticmethod
-    def crop_image(
-        pil_image: Image.Image,
-        scores_grid: dict,
-        cell_lookup: dict,
-        pad: int = 50,
-        top_k: int = -1,
-        confidence_threshold: float = 0.65
-    ):
-        """
-        Crop image using top-k most confident cell groups from `scores_grid`.
-        scores_grid = {
-            "confidence": [(65, 65), (75, 62)],
-            "cells": [(3, 6), (5, 6)]
-        }
-        Note: this function returns just one cropped image, not a list of cropped images. TODO: add support for multiple crops.
-        """
-        # Basic error checking
-        if not scores_grid or not scores_grid.get("cells") or not scores_grid.get("confidence"):
-            return None
-        
-        grouped = sorted(
-            zip(scores_grid["cells"], scores_grid["confidence"]),
-            key=lambda g: np.mean(g[1]),
-            reverse=True
-        )
-        # filter out all groups that have confidence less than the threshold
-        grouped = [g for g in grouped if np.mean(g[1]) >= confidence_threshold]
-
-        if top_k != -1:
-            grouped = grouped[:top_k]
-
-        bounds = []
-        for cell_ids, _ in grouped:
-            for cid in cell_ids:
-                c = cell_lookup[cid]
-                l, r = sorted([c.left, c.right])
-                t, b = sorted([c.top, c.bottom])
-                bounds.append((l, t, r, b))
-
-        if not bounds:
-            raise ValueError("No cells to crop from.")
-
-        ls, ts, rs, bs = zip(*bounds)
-        crop_box = (
-            max(0, min(ls) - pad),
-            max(0, min(ts) - pad),
-            min(pil_image.width,  max(rs) + pad),
-            min(pil_image.height, max(bs) + pad)
-        )
-
-        if crop_box[2] <= crop_box[0] or crop_box[3] <= crop_box[1]:
-            raise ValueError(f"Bad crop box: {crop_box}")
-
-        cropped = pil_image.crop(crop_box)
-
-        return {
-            "original_dims": pil_image.size,
-            "new_dims":      (crop_box[2] - crop_box[0], crop_box[3] - crop_box[1]),
-            "crop_box":      crop_box,
-            "crop_origin":   (crop_box[0], crop_box[1]),
-            "cropped_image": cropped
-        }
+def crop_image(
+    pil_image: Image.Image,
+    scores_grid: dict,
+    cell_lookup: dict,
+    pad: int = 50,
+    top_k: int = -1,
+    confidence_threshold: float = 0.65
+):
+    """
+    Crop image using top-k most confident cell groups from `scores_grid`.
+    Returns one cropped image with padding, centered on the selected cells.
+    """
+    # Validate input
+    if not scores_grid or not scores_grid.get("cells") or not scores_grid.get("confidence"):
+        return None
+    
+    # Get top-k groups above confidence threshold
+    groups = sorted(
+        zip(scores_grid["cells"], scores_grid["confidence"]),
+        key=lambda g: np.mean(g[1]),
+        reverse=True
+    )
+    groups = [g for g in groups if np.mean(g[1]) >= confidence_threshold]
+    if top_k > 0:
+        groups = groups[:top_k]
+    
+    if not groups:
+        return None
+    
+    # Find bounding box of all selected cells
+    bounds = []
+    for cell_ids, _ in groups:
+        for cid in cell_ids:
+            c = cell_lookup[cid]
+            bounds.append((c.left, c.top, c.right, c.bottom))
+    
+    ls, ts, rs, bs = zip(*bounds)
+    content_box = (min(ls), min(ts), max(rs), max(bs))
+    
+    # Calculate padded dimensions centered on content
+    content_center = ((content_box[0] + content_box[2]) / 2, 
+                      (content_box[1] + content_box[3]) / 2)
+    padded_width = (content_box[2] - content_box[0]) + 2 * pad
+    padded_height = (content_box[3] - content_box[1]) + 2 * pad
+    
+    # Calculate ideal crop box
+    crop_box = (
+        int(max(0, content_center[0] - padded_width / 2)),
+        int(max(0, content_center[1] - padded_height / 2)),
+        int(min(pil_image.width, content_center[0] + padded_width / 2)),
+        int(min(pil_image.height, content_center[1] + padded_height / 2))
+    )
+    
+    # Crop the image
+    cropped = pil_image.crop(crop_box)
+    actual_size = (crop_box[2] - crop_box[0], crop_box[3] - crop_box[1])
+    
+    # If crop was constrained by image boundaries, pad with black
+    if actual_size[0] < padded_width or actual_size[1] < padded_height:
+        canvas = Image.new('RGB', (int(padded_width), int(padded_height)), 'black')
+        paste_pos = ((int(padded_width) - actual_size[0]) // 2,
+                     (int(padded_height) - actual_size[1]) // 2)
+        canvas.paste(cropped, paste_pos)
+        cropped = canvas
+        actual_size = (int(padded_width), int(padded_height))
+    
+    return {
+        "original_dims": pil_image.size,
+        "new_dims": actual_size,
+        "crop_box": crop_box,
+        "crop_origin": (crop_box[0], crop_box[1]),
+        "cropped_image": cropped
+    }

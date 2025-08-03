@@ -257,7 +257,7 @@ class MultiAdvancedReasoningModelTask(BaseTask):
         """
         Run crop process
         """
-        overlay_image, cell_lookup = AdvancedReasoningModelTask.overlay_grid_on_image(
+        overlay_image, cell_lookup = BaseTask.overlay_grid_on_image(
             image, grid_size[0], grid_size[1]
         )
         
