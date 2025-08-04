@@ -19,9 +19,9 @@ class BaseTask(ABC):
 
     @abstractmethod
     def execute(self, **kwargs):
-        """ Run task executor """
+        """Run task executor"""
         pass
-    
+
     @staticmethod
     def overlay_grid_on_image(
         image: Union[Image.Image, torch.Tensor],
@@ -35,20 +35,30 @@ class BaseTask(ABC):
         Draw a rows x cols grid over `image`, label cells 1..rows*cols, and return:
         (image_with_grid, {cell_number: {left, top, right, bottom, cell_dims}})
         """
-        if num_rows + num_cols <= 2:
+        if num_rows + num_cols < 2:
             raise ValueError(f"Too few rows ({num_rows}) and columns ({num_cols}).")
 
         # --- to PIL ---
         is_tensor = isinstance(image, torch.Tensor)
         if is_tensor:
-            arr = (image.detach().cpu().permute(1, 2, 0)
-                   .mul(255).clamp(0, 255).to(torch.uint8).numpy())
+            arr = (
+                image.detach()
+                .cpu()
+                .permute(1, 2, 0)
+                .mul(255)
+                .clamp(0, 255)
+                .to(torch.uint8)
+                .numpy()
+            )
             pil = Image.fromarray(arr)
         else:
             pil = image.copy()
 
         original_image_width, original_image_height = pil.size
-        cell_width, cell_height = original_image_width // num_cols, original_image_height // num_rows
+        cell_width, cell_height = (
+            original_image_width // num_cols,
+            original_image_height // num_rows,
+        )
 
         # Auto-calculate font size and width if not provided
         if font_size is None:
@@ -76,14 +86,20 @@ class BaseTask(ABC):
         table: Dict[int, Cell] = {}
         for n, (r, c) in enumerate(product(range(num_rows), range(num_cols)), 1):
             left, top = c * cell_width, r * cell_height
-            right, bottom = min(left + cell_width, original_image_width), min(top + cell_height, original_image_height)
+            right, bottom = (
+                min(left + cell_width, original_image_width),
+                min(top + cell_height, original_image_height),
+            )
             cell = Cell(n, left, top, right, bottom)
             table[n] = cell
-            draw.text(((cell.left + cell.right) // 2,
-                       (cell.top + cell.bottom) // 2),
-                      str(n), fill=color, font=font, anchor="mm")
+            draw.text(
+                ((cell.left + cell.right) // 2, (cell.top + cell.bottom) // 2),
+                str(n),
+                fill=color,
+                font=font,
+                anchor="mm",
+            )
 
-        # --- back to original type ---
         if is_tensor:
             out = torch.from_numpy(np.array(pil)).permute(2, 0, 1)
             out = out.float().div(255) if image.dtype.is_floating_point else out
@@ -99,67 +115,73 @@ class BaseTask(ABC):
         cell_lookup: dict,
         pad: int = 50,
         top_k: int = -1,
-        confidence_threshold: float = 0.65
+        confidence_threshold: float = 0.65,
     ):
         """
         Crop image using top-k most confident cell groups from `scores_grid`.
         Returns one cropped image with padding, centered on the selected cells.
         """
         # Validate input
-        if not scores_grid or not scores_grid.get("cells") or not scores_grid.get("confidence"):
+        if (
+            not scores_grid
+            or not scores_grid.get("cells")
+            or not scores_grid.get("confidence")
+        ):
             return None
-        
+
         # Get top-k groups above confidence threshold
         groups = sorted(
             zip(scores_grid["cells"], scores_grid["confidence"]),
             key=lambda g: np.mean(g[1]),
-            reverse=True
+            reverse=True,
         )
         groups = [g for g in groups if np.mean(g[1]) >= confidence_threshold]
         if top_k > 0:
             groups = groups[:top_k]
-        
+
         if not groups:
             return None
-        
+
         # Find bounding box of all selected cells
         bounds = []
         for cell_ids, _ in groups:
             for cid in cell_ids:
                 c = cell_lookup[cid]
                 bounds.append((c.left, c.top, c.right, c.bottom))
-        
+
         ls, ts, rs, bs = zip(*bounds)
         content_box = (min(ls), min(ts), max(rs), max(bs))
-        
+
         # Calculate padded dimensions centered on content
-        content_center = ((content_box[0] + content_box[2]) / 2, 
-                        (content_box[1] + content_box[3]) / 2)
+        content_center = (
+            (content_box[0] + content_box[2]) / 2,
+            (content_box[1] + content_box[3]) / 2,
+        )
         padded_width = (content_box[2] - content_box[0]) + 2 * pad
         padded_height = (content_box[3] - content_box[1]) + 2 * pad
-        
+
         # Calculate ideal crop box
         ideal_left = content_center[0] - padded_width / 2
         ideal_top = content_center[1] - padded_height / 2
         ideal_right = content_center[0] + padded_width / 2
         ideal_bottom = content_center[1] + padded_height / 2
-        
+
         # Constrain crop box to image boundaries
         crop_box = (
             int(max(0, ideal_left)),
             int(max(0, ideal_top)),
             int(min(pil_image.width, ideal_right)),
-            int(min(pil_image.height, ideal_bottom))
+            int(min(pil_image.height, ideal_bottom)),
         )
-        
+
         # Crop the image without padding
         cropped = pil_image.crop(crop_box)
         actual_size = (crop_box[2] - crop_box[0], crop_box[3] - crop_box[1])
-        
+
         return {
             "original_dims": pil_image.size,
             "new_dims": actual_size,
             "crop_box": crop_box,
             "crop_origin": (crop_box[0], crop_box[1]),
-            "cropped_image": cropped
+            "cropped_image": cropped,
         }

@@ -19,9 +19,7 @@ def base64_to_image(base64_string: str) -> Image.Image:
     return Image.open(BytesIO(image_data))
 
 
-def resize_image(
-    img: Image.Image, max_size: tuple = (1024, 1024)
-) -> Image.Image:
+def resize_image(img: Image.Image, max_size: tuple = (1024, 1024)) -> Image.Image:
     """Resize image while maintaining aspect ratio."""
     img.thumbnail(max_size, Image.Resampling.LANCZOS)
     return img
@@ -51,17 +49,21 @@ def zoom_in_on_object_of_interest(
     """
     # Get the bounding box of the object of interest
     mask_array = np.array(mask).astype(np.uint8)
-    contours, _ = cv2.findContours(mask_array, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(
+        mask_array, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
     x, y, w, h = cv2.boundingRect(contours[0])
 
     # Crop image
     cropped_image = image.crop((x - offset, y - offset, x + w + offset, y + h + offset))
-    
+
     # Draw red box using PIL
     if draw_box:
         draw = ImageDraw.Draw(cropped_image)
-        draw.rectangle([offset, offset, w + offset, h + offset], outline=(255, 0, 0), width=2)
-    
+        draw.rectangle(
+            [offset, offset, w + offset, h + offset], outline=(255, 0, 0), width=2
+        )
+
     return cropped_image, (x, y, w, h)
 
 
@@ -73,7 +75,9 @@ def draw_bbox_on_image(image: Image.Image, bbox: list):
     return annotated_image
 
 
-def calculate_iou(bbox1: tuple[int, int, int, int], bbox2: tuple[int, int, int, int]) -> float:
+def calculate_iou(
+    bbox1: tuple[int, int, int, int], bbox2: tuple[int, int, int, int]
+) -> float:
     """
     Calculate Intersection over Union (IoU) between two bounding boxes.
     """
@@ -128,7 +132,4 @@ def nms(boxes: list[np.ndarray], scores: list[float], nms_threshold: float) -> d
             if iou > nms_threshold:
                 suppressed[j] = True  # Suppress the lower-confidence box
 
-    return {
-        "boxes": pruned_boxes,
-        "scores": pruned_scores
-    }
+    return {"boxes": pruned_boxes, "scores": pruned_scores}

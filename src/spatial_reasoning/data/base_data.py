@@ -16,13 +16,13 @@ class BaseDataset(Dataset):
         self.tf: transforms = transform
         self.visualize: bool = visualize
         self.ds: Dataset = load_dataset(**kwargs)
-        
+
     def __len__(self):
         return len(self.ds[self.split])
-    
+
     def __iter__(self):
         return iter(self.ds[self.split])
-    
+
     def __next__(self):
         return next(self.ds[self.split])
 
@@ -31,7 +31,7 @@ class BaseDataset(Dataset):
         image: Union[torch.Tensor, Image.Image],
         bboxs: list[tuple[int, int, int, int]],
         labels: Optional[list[str]] = None,
-        return_image: bool = False
+        return_image: bool = False,
     ) -> Optional[Image.Image]:
         """
         Visualize a list of bounding boxes on an image.
@@ -48,7 +48,7 @@ class BaseDataset(Dataset):
             font = ImageFont.load_default()
             for i, bbox in enumerate(bboxs):
                 x, y, w, h = map(int, bbox)
-                draw.rectangle([x, y, x+w, y+h], outline="red", width=5)
+                draw.rectangle([x, y, x + w, y + h], outline="red", width=5)
                 if labels:
                     draw.text((x, y), str(labels[i]), font=font, fill="white")
             return pil
@@ -58,8 +58,12 @@ class BaseDataset(Dataset):
         ax.imshow(image)
         for i, bbox in enumerate(bboxs):
             x, y, w, h = bbox
-            ax.add_patch(plt.Rectangle((x, y), w, h, fill=False, edgecolor='red', linewidth=1))
+            ax.add_patch(
+                plt.Rectangle((x, y), w, h, fill=False, edgecolor="red", linewidth=1)
+            )
             if labels:
-                ax.text(x, y, labels[i], color='white', backgroundcolor='black', fontsize=8)
-        ax.axis('off')
+                ax.text(
+                    x, y, labels[i], color="white", backgroundcolor="black", fontsize=8
+                )
+        ax.axis("off")
         plt.show()
