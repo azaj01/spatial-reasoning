@@ -14,7 +14,7 @@ from .base_task import BaseTask
 class VisionModelTask(BaseTask):
     def __init__(self, agent: BaseAgent, **kwargs):
         super().__init__(agent, **kwargs)
-        self.cpu_mode = kwargs.get("cpu_mode", False)
+        self.cpu_mode = kwargs.get("cpu_mode", torch.cuda.is_available())  # Default to GPU mode if available
 
         # Suppress the specific warning about meta parameters
         warnings.filterwarnings("ignore", message="copying from a non-meta parameter")
