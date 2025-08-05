@@ -1,4 +1,4 @@
-# Spatial Reasoning
+# Spatial Reasoning: www.spatial-reasoning.com
 
 A powerful Python package for object detection using advanced vision and reasoning models, including OpenAI's models and Google's Gemini.
 
