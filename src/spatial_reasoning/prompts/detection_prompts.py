@@ -445,7 +445,6 @@ class BboxDetectionWithGridCellPrompt(BasePrompt):
             description="Bounding box detection using grid overlay for precise localization",
         )
 
-
     @staticmethod
     def _require(kwargs: Dict[str, Any], key: str):
         if key not in kwargs or kwargs[key] is None:
@@ -471,41 +470,51 @@ class BboxDetectionWithGridCellPrompt(BasePrompt):
             "cell_tuples": cell_tuples,
         }
 
-    def _format_grid_visualization(self, geo: Dict[str, Any]) -> str:
-        """Create visual grid representation."""
+    def _create_ascii_cell_table(self, geo: Dict[str, Any]) -> str:
+        """Create an ASCII table showing cell IDs and their pixel coordinates."""
         lines = []
-        lines.append("```")
-        lines.append("Cells:")
-
-        cell_id = 1
-        for r in range(geo["rows"]):
-            row_cells = []
-            for c in range(geo["cols"]):
-                row_cells.append(f"[{cell_id:2d}]")
-                cell_id += 1
-            lines.append(" ".join(row_cells))
-            if r < geo["rows"] - 1:  # Add blank line between rows
-                lines.append("")
-
-        lines.append("```")
-        return "\n".join(lines)
-
-    def _format_cell_table(self, geo: Dict[str, Any]) -> str:
-        """Create detailed cell coordinate table."""
-        lines = []
-        lines.append("```")
-        lines.append("Cell | x      | y      | width  | height | center")
-        lines.append("-----|--------|--------|--------|--------|--------")
-
+        
+        # Header
+        lines.append("CELL REFERENCE TABLE:")
+        lines.append("┌──────┬────────────┬────────────┬─────────┬─────────┬──────────────┐")
+        lines.append("│ CELL │    X MIN   │    X MAX   │  Y MIN  │  Y MAX  │    CENTER    │")
+        lines.append("├──────┼────────────┼────────────┼─────────┼─────────┼──────────────┤")
+        
+        # Data rows
         for cell_id in sorted(geo["cell_tuples"].keys()):
             x, y, w, h = geo["cell_tuples"][cell_id]
+            x_min, x_max = x, x + w - 1
+            y_min, y_max = y, y + h - 1
             center_x = x + w // 2
             center_y = y + h // 2
-            lines.append(
-                f"{cell_id:4d} | {x:6d} | {y:6d} | {w:6d} | {h:6d} | ({center_x:3d},{center_y:3d})"
-            )
+            
+            lines.append(f"│ {cell_id:4d} │ {x_min:10d} │ {x_max:10d} │ {y_min:7d} │ {y_max:7d} │ ({center_x:3d}, {center_y:3d}) │")
+        
+        lines.append("└──────┴────────────┴────────────┴─────────┴─────────┴──────────────┘")
+        return "\n".join(lines)
 
-        lines.append("```")
+    def _create_ascii_grid_layout(self, geo: Dict[str, Any]) -> str:
+        """Create visual ASCII grid layout showing cell positions."""
+        lines = []
+        lines.append(f"\nGRID LAYOUT ({geo['rows']}×{geo['cols']}):")
+        lines.append("┌" + "─" * (geo['cols'] * 6 - 1) + "┐")
+        
+        cell_id = 1
+        for r in range(geo["rows"]):
+            row_parts = []
+            for c in range(geo["cols"]):
+                if c == 0:
+                    row_parts.append(f"│ {cell_id:3d} ")
+                else:
+                    row_parts.append(f"│ {cell_id:3d} ")
+                cell_id += 1
+            row_parts.append("│")
+            lines.append("".join(row_parts))
+            
+            if r < geo["rows"] - 1:
+                lines.append("├" + "─────┼" * (geo['cols'] - 1) + "─────┤")
+        
+        lines.append("└" + "─" * (geo['cols'] * 6 - 1) + "┘")
         return "\n".join(lines)
 
     def _extract_geo(self, kwargs):
@@ -520,66 +529,64 @@ class BboxDetectionWithGridCellPrompt(BasePrompt):
         geo, obj = self._extract_geo(kwargs)
         rows, cols, W, H = geo["rows"], geo["cols"], geo["W"], geo["H"]
 
-        # Compact, deterministic mapping (inclusive integer pixel ranges)
-        mapping_lines = []
-        for cid in sorted(geo["cell_tuples"].keys()):
-            x, y, w, h = geo["cell_tuples"][cid]
-            x0, x1 = x, x + w - 1
-            y0, y1 = y, y + h - 1
-            mapping_lines.append(f"{cid}: x[{x0}-{x1}], y[{y0}-{y1}]")
-        mapping = "\n".join(mapping_lines)
+        # Create ASCII table for clear cell reference
+        ascii_table = self._create_ascii_cell_table(geo)
+        grid_layout = self._create_ascii_grid_layout(geo)
 
-        return f"""You are a visual detector. Compute internally; do NOT describe steps.
+        return f"""DETECT "{obj}" in {W}×{H}px image with {rows}×{cols} grid.
 
-    Return ONLY a Python dict literal with EXACT keys and structure:
-    {{
-    "confidence": [conf1, conf2, ...],
-    "bbox": [(x1, y1, w1, h1), (x2, y2, w2, h2), ...]
-    }}
+**REQUIRED OUTPUT FORMAT (EXACT):**
+{{
+"confidence": [conf1, conf2, ...],
+"bbox": [(x1, y1, w1, h1), (x2, y2, w2, h2), ...]
+}}
 
-    Image: {W}×{H}px. Grid: {rows}×{cols}.
-    Cell reference (inclusive pixel ranges):
-    {mapping}
+{ascii_table}
 
-    Internal checklist (do NOT output):
-    1) Identify all visible "{obj}" solely from pixels (ignore priors/pattern symmetry).
-    2) For each instance, determine left/right/top/bottom on visible edges.
-    3) Ensure cell-consistency: cells touched by the box form one contiguous rectangle in grid indices.
-    4) Convert to integers: left,top = floor; right,bottom = ceil; w = right-left+1; h = bottom-top+1.
-    5) Clamp to image bounds (0..{W - 1}, 0..{H - 1}); enforce w≥1, h≥1.
-    6) If an edge is ambiguous within a cell, snap to the nearest visible edge; if still uncertain, snap to the nearest cell boundary.
-    7) Confidence (0–100): start at 100; subtract 10 for each missing clear cue among {{left/right/top/bottom edge, interior features consistent with "{obj}"}}. If <60, omit that box.
-    8) Reject pattern completion: never add repeated instances unless clearly visible.
-    
-    **NOTE:** If no clear "{obj}" visible, return {{"confidence": [], "bbox": []}}.
+{grid_layout}
 
-    Output policy (MANDATORY):
-    - No prose, no explanations, no extra keys—ONLY the dict above.
-    """
+**DETECTION RULES:**
+• Only detect clearly visible instances - NO pattern completion
+• Use grid cells as spatial reference for precise edge location
+• Each bbox: x=left, y=top, w=width, h=height (integers only)
+• Coordinates clamped to [0,{W-1}] × [0,{H-1}]
+
+**CONFIDENCE SCORING:**
+• 90-100%: Unmistakable, tight bbox, clear edges
+• 80-89%: Strong evidence, minor ambiguity, loose bbox
+• 70-79%: Partially occluded but clearly identifiable
+• 60-69%: Substantial uncertainty, unclear boundaries
+• <60%: Discard detection
+
+**EDGE AMBIGUITY:** When boundaries fall within cells, snap to nearest visible edge, then cell boundary if unclear.
+
+**NO DETECTIONS FOUND:** Return {{"confidence": [], "bbox": []}}
+
+**OUTPUT:** Python dict only. Zero explanations.
+        """
 
     def get_user_prompt(self, **kwargs) -> str:
         geo, obj = self._extract_geo(kwargs)
         rows, cols, W, H = geo["rows"], geo["cols"], geo["W"], geo["H"]
 
-        mapping_lines = []
-        for cid in sorted(geo["cell_tuples"].keys()):
-            x, y, w, h = geo["cell_tuples"][cid]
-            x0, x1 = x, x + w - 1
-            y0, y1 = y, y + h - 1
-            mapping_lines.append(f"{cid}: x[{x0}-{x1}], y[{y0}-{y1}]")
-        mapping = "\n".join(mapping_lines)
+        # Create ASCII table for user prompt
+        ascii_table = self._create_ascii_cell_table(geo)
+        grid_layout = self._create_ascii_grid_layout(geo)
 
-        return f"""Detect all instances of "{obj}" in a {W}×{H}px image with a {rows}×{cols} grid.
+        return f"""DETECT: "{obj}" in {W}×{H}px image with {rows}×{cols} grid
 
-    Cell reference (inclusive):
-    {mapping}
+{ascii_table}
 
-    Return ONLY:
-    {{
-    "confidence": [score1, score2, ...],
-    "bbox": [(x, y, w, h), (x, y, w, h), ...]
-    }}
-    """
+{grid_layout}
+
+RETURN ONLY:
+{{
+"confidence": [score1, score2, ...],
+"bbox": [(x, y, w, h), (x, y, w, h), ...]
+}}
+
+Each bbox represents one physical object instance. Use the cell reference table above to determine precise pixel coordinates.
+        """
 
     def get_required_parameters(self) -> Dict[str, str]:
         return {

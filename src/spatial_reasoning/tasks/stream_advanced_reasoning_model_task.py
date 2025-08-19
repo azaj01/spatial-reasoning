@@ -77,7 +77,7 @@ class StreamAdvancedReasoningModelTask(BaseTask):
         max_crops = kwargs.get("max_crops", 2)
         top_k = kwargs.get("top_k", -1)
         confidence_threshold = kwargs.get("confidence_threshold", 0.5)
-        convergence_threshold = kwargs.get("convergence_threshold", 0.5)
+        convergence_threshold = kwargs.get("convergence_threshold", 0.6)
 
         origin_coordinates = (0, 0)
         overlay_samples = []
@@ -142,9 +142,7 @@ class StreamAdvancedReasoningModelTask(BaseTask):
 
         # Final detection on the cropped image
         kwargs["image"] = image
-        kwargs["grid_size"] = (
-            (2, 2) if (image.width < 512 and image.height < 512) else _grid_size
-        )
+        kwargs["grid_size"] = _grid_size
         kwargs["confidence_threshold"] = 0.8
         vision_out, vanilla_out = self.run_agents_parallel(**kwargs)
 

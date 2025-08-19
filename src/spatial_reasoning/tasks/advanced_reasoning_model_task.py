@@ -36,7 +36,7 @@ class AdvancedReasoningModelTask(BaseTask):
         max_crops = kwargs.get("max_crops", 4)
         top_k = kwargs.get("top_k", -1)
         confidence_threshold = kwargs.get("confidence_threshold", 0.5)
-        convergence_threshold = kwargs.get("convergence_threshold", 0.5)
+        convergence_threshold = kwargs.get("convergence_threshold", 0.6)
 
         origin_coordinates = (0, 0)
 

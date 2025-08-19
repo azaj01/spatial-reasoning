@@ -100,11 +100,11 @@ class VanillaReasoningModelTask(BaseTask):
             confidence = structured_response["confidence"][i]
 
             cell = Cell(id=i, left=x, top=y, right=x + w, bottom=y + h)
-            if (
-                isinstance(self.prompt, BboxDetectionWithGridCellPrompt)
-                and confidence == 100
-            ):  # Observation: whenever confidence is a 100, model is highly unreliable. Applied only to BBOX Prompt (used by the advanced reasoning model)
-                continue
+            # if (
+            #     isinstance(self.prompt, BboxDetectionWithGridCellPrompt)
+            #     and confidence == 100
+            # ):  # Observation: whenever confidence is a 100, model is highly unreliable. Applied only to BBOX Prompt (used by the advanced reasoning model)
+            #     continue
 
             if typecast_confidence(confidence) >= confidence_threshold:
                 confidence_scores.append(confidence)

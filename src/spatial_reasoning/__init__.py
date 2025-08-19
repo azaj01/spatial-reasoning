@@ -42,7 +42,7 @@ except ImportError as e:
         sys.modules["flash_attn_2_cuda"] = MockFlashAttn()
 
 
-__version__ = "0.1.9"
+__version__ = "0.2.0"
 __author__ = "Qasim Wani"
 __email__ = "qasim31wani@gmail.com"
 
