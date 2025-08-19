@@ -17,7 +17,7 @@ with open(os.path.join(this_directory, "requirements.txt"), encoding="utf-8") as
 
 setup(
     name="spatial-reasoning",
-    version="0.2.0",
+    version="0.2.1",
     author="Qasim Wani",
     author_email="qasim31wani@gmail.com",
     description="A PyPI package for object detection using advanced vision models",

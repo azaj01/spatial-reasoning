@@ -10,10 +10,10 @@ requests>=2.25.0
 python-dotenv>=0.19.0
 
 # AI/ML Libraries
-openai>=1.0.0
-google-genai
-transformers>=4.30.0
-datasets>=2.0.0
+openai==1.97.1
+google-genai==1.27.0
+transformers==4.54.0
+datasets>=2.18.0
 accelerate>=1.6.0
 
 # Optional development dependencies
