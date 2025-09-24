@@ -3,6 +3,7 @@ import os
 from .base_agent import BaseAgent
 from .gemini_agent import GeminiAgent
 from .openai_agent import OpenAIAgent
+from .xai_agent import XAIAgent
 
 
 class AgentFactory:
@@ -14,6 +15,8 @@ class AgentFactory:
             return os.getenv("OPENAI_API_KEY")
         if "gemini" in platform_name.lower():
             return os.getenv("GEMINI_API_KEY")
+        if "xai" in platform_name.lower():
+            return os.getenv("XAI_API_KEY")
 
     @staticmethod
     def create_agent(model: str, platform_name: str) -> BaseAgent:
@@ -23,6 +26,8 @@ class AgentFactory:
             return OpenAIAgent(model, api_key)
         elif GeminiAgent.is_supported_model(model):
             return GeminiAgent(model, api_key)
+        elif XAIAgent.is_supported_model(model):
+            return XAIAgent(model, api_key)
         else:
             raise ValueError(f"Model '{model}' is not supported by any available agent")
 
@@ -32,4 +37,5 @@ class AgentFactory:
         return {
             "openai": ["gpt-4o", "o4-mini-high", "o3"],
             "gemini": ["gemini-2.5-flash"],
+            "xai": ["grok-4-fast-reasoning"],
         }

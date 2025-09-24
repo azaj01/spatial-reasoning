@@ -216,21 +216,20 @@ class GeminiPrompt(BasePrompt):
 
 class GridCellDetectionPrompt(BasePrompt):
     """
-    Single-image grid detector with grouped outputs.
-    Returns a Python-literal dict (not JSON):
+    Simplified single-image grid detector with grouped outputs.
+    Returns a Python-literal dict:
     {
       "confidence": [(conf1, conf2, ...), (conf1, ...), ...],
       "cells":      [(cell1, cell2, ...), (cell1, ...), ...]
     }
-    Each inner tuple corresponds to one physical object. Tuple lengths must match per group.
+    Each inner tuple corresponds to one physical object.
     """
 
     def __init__(self):
         super().__init__(
-            name="grid_cell_detection_v2",
-            description="Grouped cells/confidence per object (single grid image)",
+            name="grid_cell_detection_simple",
+            description="Basic cells/confidence per object (single grid image)",
         )
-
 
     @staticmethod
     def _require(kwargs: Dict[str, Any], key: str):
@@ -248,176 +247,65 @@ class GridCellDetectionPrompt(BasePrompt):
             n += cols
         return "\n".join(lines)
 
-    @classmethod
-    def _make_geometry(cls, rows: int, cols: int, W: int, H: int) -> Dict[str, Any]:
-        cw, ch = W / cols, H / rows
-        return {
-            "rows": rows,
-            "cols": cols,
-            "total": rows * cols,
-            "W": W,
-            "H": H,
-            "cell_w": cw,
-            "cell_h": ch,
-            "layout": cls._make_layout(rows, cols),
-            "formula": (
-                f"row = floor(cy / {ch:.6f}) + 1\n"
-                f"col = floor(cx / {cw:.6f}) + 1\n"
-                f"id  = (row-1)*{cols} + col   # row-major, 1-indexed"
-            ),
-        }
-
-    @staticmethod
-    def _make_geo_from_table(
-        table: Dict[int, Cell], rows: int, cols: int, W: int, H: int
-    ):
-        # Per-cell boxes in row-major order
-        def cell(r, c):
-            return table[r * cols + c + 1]
-
-        # Row ranges: min top, max bottom across all cols of that row
-        row_ranges = []
-        for r in range(rows):
-            tops = [cell(r, c).top for c in range(cols)]
-            bottoms = [cell(r, c).bottom for c in range(cols)]
-            row_ranges.append((min(tops), max(bottoms)))
-
-        # Col ranges: min left, max right across all rows of that col
-        col_ranges = []
-        for c in range(cols):
-            lefts = [cell(r, c).left for r in range(rows)]
-            rights = [cell(r, c).right for r in range(rows)]
-            col_ranges.append((min(lefts), max(rights)))
-
-        # Nominal cell size (may differ for last row/col; used only for display)
-        cw = sum(col_ranges[i][1] - col_ranges[i][0] for i in range(cols)) / cols
-        ch = sum(row_ranges[i][1] - row_ranges[i][0] for i in range(rows)) / rows
-
-        # Pretty layout
-        layout_lines = []
-        n = 1
-        for r in range(1, rows + 1):
-            row_ids = ", ".join(str(i) for i in range(n, n + cols))
-            layout_lines.append(f"Row {r} – cells {row_ids}")
-            n += cols
-
-        # Pretty ranges
-        row_text = "\n".join(
-            f"Row {r + 1}: y ∈ [{y0}, {y1})"
-            if r < rows - 1
-            else f"Row {r + 1}: y ∈ [{y0}, {y1}]"
-            for r, (y0, y1) in enumerate(row_ranges)
-        )
-        col_text = "\n".join(
-            f"Col {c + 1}: x ∈ [{x0}, {x1})"
-            if c < cols - 1
-            else f"Col {c + 1}: x ∈ [{x0}, {x1}]"
-            for c, (x0, x1) in enumerate(col_ranges)
-        )
-
-        return {
-            "rows": rows,
-            "cols": cols,
-            "total": rows * cols,
-            "W": W,
-            "H": H,
-            "cell_w": cw,
-            "cell_h": ch,
-            "row_ranges": row_ranges,
-            "col_ranges": col_ranges,
-            "row_text": row_text,
-            "col_text": col_text,
-            "layout": "\n".join(layout_lines),
-        }
-
     def _extract_geo(self, kwargs):
         W, H = self._require(kwargs, "resolution")
         rows, cols = self._require(kwargs, "grid_size")
         obj = self._require(kwargs, "object_of_interest")
-        table = self._require(kwargs, "cell_lookup")
-        # Always trust the image we drew on:
-        geo = self._make_geo_from_table(table, int(rows), int(cols), int(W), int(H))
-        return geo, str(obj)
+        return {
+            "rows": rows,
+            "cols": cols,
+            "total": rows * cols,
+            "W": W,
+            "H": H,
+            "layout": self._make_layout(rows, cols),
+        }, obj
 
     def get_system_prompt(self, **kwargs) -> str:
         """Get the system prompt for grid cell detection."""
         geo, obj = self._extract_geo(kwargs)
-
-        return f"""You are a meticulous visual reasoning model analyzing images with grid overlays.
-        **Your Task:**
-        Detect every instance of "{obj}" and report which grid **cell IDs** each instance touches.
-
+        return f"""You are a visual reasoning model analyzing grid-overlay images.
+        **Task:** Detect all instances of "{obj}" and report which grid cells each instance touches.
 
         **Output Format:**
-        Return a Python dict literal (NOT JSON) with this exact structure:
+        Return a Python dict literal (NOT JSON) with:
         {{
-        "confidence": [(c11, c12, ...), (c21, ...), ...],
-        "cells":      [(id11, id12, ...), (id21, ...), ...]
+          "confidence": [(c11, c12, ...), (c21, ...), ...],
+          "cells":      [(id11, id12, ...), (id21, ...), ...]
         }}
-        Each inner tuple represents one physical {obj}. Tuple lengths must match between confidence and cells.
+        - One tuple per physical {obj}, with matching lengths for confidence and cells.
+        - If no objects found: {{"confidence": [], "cells": []}}
 
-        **Grid facts (row-major, 1-indexed):**
+        **Grid Details:**
         - Image size: {geo["W"]}×{geo["H"]} px
         - Grid: {geo["rows"]} rows × {geo["cols"]} cols = {geo["total"]} cells
         - Layout:
         {geo["layout"]}
 
-        **Row y-ranges**
-        {geo["row_text"]}
+        **Instructions:**
+        - Use red grid lines and numerals to determine cells.
+        - Include all cells an object touches, even partially.
+        - Group cells by object (e.g., if one {obj} spans 4, 5, list as (4, 5)).
+        - Sort cells within each group, no duplicates.
+        - Confidence (60-100%): Higher if more of the cell contains the object, lower for edges; omit <60%.
 
-        **Column x-ranges**
-        {geo["col_text"]}
-        
-        **Note:** Do NOT re-derive widths/heights; use these ranges exactly.
-
-        Dual-evidence policy
-        1) **VISUAL first.** Read red grid **lines** and **numerals** directly from the image to determine cells contain the object(s).
-        2) **CROSS-CHECK** with the tabulated row/column ranges. If a visually estimated boundary differs by ≤ 10 px from a tabulated boundary, SNAP to the tabulated boundary.
-        3) Numerals in the image are for **ID verification only**; never treated as objects.
-
-        **Important Instructions:**
-        - IGNORE red grid lines and numbers (pixels with R>200, G<60, B<60) - they are NOT objects
-        - Find every distinct {obj} visible under/through the grid
-        - Include ALL cells that an object touches, even partially
-        - Group cells by object: if one {obj} spans cells 5, 6, 10, 11, list them together
-        - If a red numeral overlaps an object, ignore those red pixels; use nearest non-red object pixels.
-
-        **Confidence Scoring (percentage of object in each cell):**
-        - 90-100: Most of the cell contains the object
-        - 80-89: About half the cell contains the object
-        - 70-79: Substantial portion but less than half
-        - 60-69: Small edge or corner of object
-        - Below 60: Too uncertain - omit this cell
-
-        **Output Rules:**
-        - One tuple group per physical object
-        - Sort cells within each group in ascending order
-        - No duplicate cells within a group
-        - Drop cells outside range [1, {geo["total"]}] or with confidence < 60
-        - If no objects found: {{"confidence": [], "cells": []}}
-        - Use tuples (), not lists []
-        - Output ONLY the dict literal, no other text"""
+        Provide reasoning under <thinking>...</thinking>."""
 
     def get_user_prompt(self, **kwargs) -> str:
         """Get the user prompt for grid cell detection."""
         geo, obj = self._extract_geo(kwargs)
+        return f"""Find all instances of "{obj}" in this grid image.
 
-        return f"""Find all instances of "{obj}" in this grid image.    
+        **Grid Info:**
+        - Dimensions: {geo["rows"]} rows × {geo["cols"]} columns = {geo["total"]} cells
+        - Resolution: {geo["W"]} × {geo["H"]} pixels
 
-    **Grid Information:**
-    - Dimensions: {geo["rows"]} rows × {geo["cols"]} columns = {geo["total"]} cells
-    - Resolution: {geo["W"]} × {geo["H"]} pixels  
-    - Cell size: {geo["cell_w"]:.1f} × {geo["cell_h"]:.1f} pixels
-    - Numbering: 1 to {geo["total"]} (left-to-right, top-to-bottom)
+        <thinking>Reasoning for your answer</thinking>
 
-    **Your Task:**
-    Identify which numbered cells contain any part of "{obj}".
-
-    Return a Python dict with grouped detections:
-    {{
-    "confidence": [(conf1, conf2, ...), ...],
-    "cells": [(cell1, cell2, ...), ...]
-    }}"""
+        Return a Python dict:
+        {{
+          "confidence": [(conf1, conf2, ...), ...],
+          "cells": [(cell1, cell2, ...), ...]
+        }}"""
 
     def get_required_parameters(self) -> Dict[str, str]:
         return {
@@ -426,7 +314,6 @@ class GridCellDetectionPrompt(BasePrompt):
             "resolution": "(W, H) pixels of the grid image",
             "grid_size": "(rows, cols)",
         }
-
 
 class BboxDetectionWithGridCellPrompt(BasePrompt):
     """
