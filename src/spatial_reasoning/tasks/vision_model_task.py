@@ -93,6 +93,11 @@ class VisionModelTask(BaseTask):
             target_sizes=[(image.height, image.width)],
         )[0]
 
+        # DEBUGGING PURPOSES ONLY TO SEE WHAT THE REASONING MODEL IS SAYING
+        print("----------------Vision Model Task LOGGING REASONING ----------------")
+        print(results["boxes"])
+        print("----------------Vision Model Task LOGGING REASONING ----------------")
+
         if len(results["boxes"]) == 0:
             print(f"No objects found for prompt: {prompt}.")
             return []
