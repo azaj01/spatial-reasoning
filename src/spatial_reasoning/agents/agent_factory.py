@@ -37,5 +37,5 @@ class AgentFactory:
         return {
             "openai": ["gpt-4o", "o4-mini-high", "o3"],
             "gemini": ["gemini-2.5-flash"],
-            "xai": ["grok-4-fast-reasoning"],
+            "xai": ["grok-4-0709", "grok-4-fast-reasoning"],
         }

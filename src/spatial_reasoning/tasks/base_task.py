@@ -159,11 +159,16 @@ class BaseTask(ABC):
             raise ValueError(f"Bad crop box: {crop_box}")
 
         cropped = pil_image.crop(crop_box)
+        confidences = [np.mean(g[1]) for g in grouped]
+        # scale from 0 to 1. note: if it's already scaled, we don't need to do anything.
+        confidences = [c / 100 if c > 1 else c for c in confidences]
+        
 
         return {
             "original_dims": pil_image.size,
             "new_dims":      (crop_box[2] - crop_box[0], crop_box[3] - crop_box[1]),
             "crop_box":      crop_box,
             "crop_origin":   (crop_box[0], crop_box[1]),
-            "cropped_image": cropped
+            "cropped_image": cropped,
+            "confidences": confidences
         }

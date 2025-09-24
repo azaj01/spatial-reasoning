@@ -286,7 +286,12 @@ class GridCellDetectionPrompt(BasePrompt):
         - Include all cells an object touches, even partially.
         - Group cells by object (e.g., if one {obj} spans 4, 5, list as (4, 5)).
         - Sort cells within each group, no duplicates.
-        - Confidence (60-100%): Higher if more of the cell contains the object, lower for edges; omit <60%.
+        - Confidence Scoring (percentage of object in each cell):
+        - 90-100: Most of the cell contains the object
+        - 80-89: About half the cell contains the object
+        - 70-79: Substantial portion but less than half
+        - 60-69: Small edge or corner of object
+        - Below 60: Too uncertain - omit this cell
 
         Provide reasoning under <thinking>...</thinking>."""
 

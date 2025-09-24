@@ -104,4 +104,5 @@ class XAIAgent(BaseAgent):
     @classmethod
     def is_supported_model(cls, model: str) -> bool:
         """Check if the model is supported by XAI."""
-        return "grok-4-fast-reasoning" in model.lower()
+        xai_models = ["grok-4-0709", "grok-4-fast-reasoning"]
+        return any(model_name in model.lower() for model_name in xai_models)

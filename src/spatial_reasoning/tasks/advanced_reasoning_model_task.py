@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from itertools import product
 
+import numpy as np
 from PIL import Image
 
 from ..agents import BaseAgent
@@ -30,10 +31,10 @@ class AdvancedReasoningModelTask(BaseTask):
             image: Image.Image
             prompt: str
         """
-        image: Image.Image = kwargs["image"]
+        image: Image.Image = kwargs["image"].copy()
         object_of_interest: str = kwargs["prompt"]
         grid_size = kwargs.get("grid_size", (4, 3))  # num_rows x num_cols
-        max_crops = kwargs.get("max_crops", 4)
+        max_crops = kwargs.get("max_crops", 3)
         top_k = kwargs.get("top_k", -1)
         confidence_threshold = kwargs.get("confidence_threshold", 0.5)
         convergence_threshold = kwargs.get("convergence_threshold", 0.6)
@@ -42,6 +43,9 @@ class AdvancedReasoningModelTask(BaseTask):
 
         overlay_samples = []
         is_terminal_state = False
+        # Preserve the coordinates of each crop for mPF calculation. 
+        crop_metadata = {'global_crops': [0, 0, image.width, image.height], 'confidences': [1]}
+        total_area = image.width * image.height
         while not is_terminal_state and len(overlay_samples) < max_crops:
             if (
                 image.width < 512 and image.height < 512 and len(overlay_samples) > 0
@@ -49,7 +53,9 @@ class AdvancedReasoningModelTask(BaseTask):
                 _grid_size = (3, 2)
             else:
                 _grid_size = grid_size
-            overlay_image, image, origin_coordinates, is_terminal_state = (
+            # Note: overlay_image generates the grid overlay on the image passed in, not the cropped image.
+            # so it's always one-step behind the actual cropped image
+            overlay_image, image, origin_coordinates, confidences, is_terminal_state = (
                 self.run_single_crop_process(
                     image.copy(),
                     object_of_interest,
@@ -60,6 +66,12 @@ class AdvancedReasoningModelTask(BaseTask):
                     convergence_threshold,
                 )
             )
+            cropped_coordinates = (origin_coordinates[0], origin_coordinates[1], image.width, image.height) # x, y, width, height
+            # calculate area
+            area = cropped_coordinates[2] * cropped_coordinates[3]
+            print(f"percent area: {area / total_area}")
+            crop_metadata['global_crops'].append(cropped_coordinates)  # post cropping global coordinates.
+            crop_metadata['confidences'].append(np.max(confidences))   # highest confidence for the crop
 
             overlay_samples.append(overlay_image)
 
@@ -73,14 +85,17 @@ class AdvancedReasoningModelTask(BaseTask):
         cropped_visualized_image = BaseDataset.visualize_image(
             image, [cell.to_tuple() for cell in out["bboxs"]], return_image=True
         )
+        # global_crops.append(out["bboxs"]) # retrieves the final bounding box for calculation - should not include this because this is the actual model prediction so we're colluding prediction with zoom
         overlay_samples.append(cropped_visualized_image)
         # Restore to original coordinates
         restored_bboxs = get_original_bounding_box(
             cropped_bounding_boxs=out["bboxs"],
             crop_origin=origin_coordinates,
         )
+        
         out["bboxs"] = restored_bboxs
         out["overlay_images"] = overlay_samples
+        out["crop_metadata"] = crop_metadata
         return out
 
     @staticmethod
@@ -165,7 +180,7 @@ class AdvancedReasoningModelTask(BaseTask):
             assert cropped_image_data is not None, "Cropped image data is None"
         except Exception as e:
             print(f"Error cropping image: {e}")
-            return overlay_image, image, origin_coordinates, True
+            return overlay_image, image, origin_coordinates, [0.0], True
 
         crop_origin = (
             origin_coordinates[0] + cropped_image_data["crop_origin"][0],
@@ -176,6 +191,7 @@ class AdvancedReasoningModelTask(BaseTask):
             overlay_image,
             cropped_image_data["cropped_image"],
             crop_origin,
+            cropped_image_data["confidences"],
             self.is_terminal_state(
                 image, cropped_image_data["cropped_image"], convergence_threshold
             ),

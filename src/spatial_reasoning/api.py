@@ -1,6 +1,7 @@
 import json
 import os
 import time
+from threading import Lock
 from typing import Dict, Generator, List, Optional, Union
 
 from dotenv import load_dotenv
@@ -23,34 +24,38 @@ class DetectionAPI:
     def __init__(self):
         self._agents, self._tasks = {}, {}
         self._initialized = False
+        self._init_lock = Lock()
 
     def _initialize_if_needed(self):
         if self._initialized:
             return
-        print("Initializing agents and tasks...")
+        with self._init_lock:
+            if self._initialized:
+                return
+            print("Initializing agents and tasks...")
 
-        self._agents["openai"] = self._safe_agent("o4-mini", "openai")
-        if self._agents["openai"]:
-            self._tasks.update({
-                "openai_advanced_reasoning": AdvancedReasoningModelTask(self._agents["openai"]),
-                "openai_stream_reasoning": StreamAdvancedReasoningModelTask(self._agents["openai"]),
-                "openai_vanilla_reasoning": VanillaReasoningModelTask(self._agents["openai"], prompt_type="vanilla"),
-                "openai_vision_model": VisionModelTask(self._agents["openai"]),
-            })
+            self._agents["openai"] = self._safe_agent("o4-mini", "openai")
+            if self._agents["openai"]:
+                self._tasks.update({
+                    "openai_advanced_reasoning": AdvancedReasoningModelTask(self._agents["openai"]),
+                    "openai_stream_reasoning": StreamAdvancedReasoningModelTask(self._agents["openai"]),
+                    "openai_vanilla_reasoning": VanillaReasoningModelTask(self._agents["openai"], prompt_type="vanilla"),
+                    "vision_model": VisionModelTask(self._agents["openai"]),
+                })
 
-        self._agents["gemini"] = self._safe_agent("gemini-2.5-flash", "gemini")
-        if self._agents["gemini"]:
-            self._tasks["gemini"] = GeminiTask(self._agents["gemini"])
+            self._agents["gemini"] = self._safe_agent("gemini-2.5-flash", "gemini")
+            if self._agents["gemini"]:
+                self._tasks["gemini"] = GeminiTask(self._agents["gemini"])
 
-        self._agents["xai"] = self._safe_agent("grok-4-fast-reasoning", "xai")
-        if self._agents["xai"]:
-            self._tasks.update({
-                "xai_advanced_reasoning": AdvancedReasoningModelTask(self._agents["xai"]),
-                "xai_vanilla_reasoning": VanillaReasoningModelTask(self._agents["xai"], prompt_type="advanced"),
-            })
+            self._agents["xai"] = self._safe_agent("grok-4-fast-reasoning", "xai")
+            if self._agents["xai"]:
+                self._tasks.update({
+                    "xai_advanced_reasoning": AdvancedReasoningModelTask(self._agents["xai"]),
+                    "xai_vanilla_reasoning": VanillaReasoningModelTask(self._agents["xai"], prompt_type="advanced"),
+                })
 
-        self._initialized = True
-        print("Initialization complete!")
+            self._initialized = True
+            print("Initialization complete!")
 
     def _safe_agent(self, model: str, platform: str):
         try:
@@ -93,6 +98,7 @@ class DetectionAPI:
             "visualized_image": vis,
             "original_image": image,
             "overlay_images": output.get("overlay_images", []),
+            "crop_metadata": output.get("crop_metadata", {}),
             "total_time": total_time,
             "object_of_interest": object_of_interest,
             "task_type": task_type,
@@ -170,6 +176,7 @@ def save_outputs_to_disk(folder: str, result: Dict) -> None:
             "task_type": result["task_type"],
             "task_kwargs": result["task_kwargs"],
             "bboxs": result["bboxs"],
+            "crop_metadata": result.get("crop_metadata", {}),
             "total_time": result["total_time"],
         }, f, indent=2)
 
