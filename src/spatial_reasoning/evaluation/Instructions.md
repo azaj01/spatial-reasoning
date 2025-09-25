@@ -37,12 +37,12 @@ python -m spatial_reasoning.evaluation.benchmark \
 ```
 
 **Parameters:**
-- `--agents`: List of agents to evaluate (space-separated)
+- `--agents`: List of agents to evaluate (space-separated). Add as many as you'd like to evaluate.
   - `gemini`: Google's Gemini model
-  - `openai_vanilla_reasoning`: OpenAI vanilla reasoning model
-  - `xai_vanilla_reasoning`: XAI vanilla reasoning model
-  - `openai_advanced_reasoning`: OpenAI advanced reasoning model
-  - `xai_advanced_reasoning`: XAI advanced reasoning model
+  - `openai_vanilla_reasoning`: OpenAI o4-mini baseline
+  - `xai_vanilla_reasoning`: Grok4 fast-reasoning baseline
+  - `openai_advanced_reasoning`: OpenAI o4-mini with tool-use
+  - `xai_advanced_reasoning`: xAI fast-reasoning with tool-use
 - `--data`: Path to your parsed dataset JSON file
 - `--save-location`: Directory where benchmark results will be saved
 - `--num-workers`: Number of parallel workers for processing (adjust based on your system)
@@ -62,8 +62,8 @@ python evaluation/analysis.py /tmp/benchmark --output-dir /tmp/benchmark/plots
 ## Output
 
 After running both steps, you'll find:
-- **Benchmark results**: Raw evaluation data in `/tmp/sr-benchmark`
-- **Visualization plots**: Performance charts and comparisons in `/tmp/sr-benchmark/plots`
+- **Benchmark results**: Raw evaluation data in `/tmp/benchmark`
+- **Visualization plots**: Performance charts and comparisons in `/tmp/benchmark/plots`
 
 ## Tips
 
