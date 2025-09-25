@@ -334,6 +334,125 @@ def plot_confidence_accuracy(
     plt.close(fig)
 
 
+def plot_focal_diou_breakdown(
+    rows: List[dict],
+    agents: List[str],
+    output_path: str,
+) -> None:
+    metric_key = "max_focal_diou"
+    resolution_order = ["standard", "medium", "high"]
+    category_order = ["cua", "general", "tiny"]
+    resolution_labels = {
+        "standard": "Standard",
+        "medium": "Medium",
+        "high": "High",
+    }
+    category_labels = {
+        "cua": "CUA",
+        "general": "General",
+        "tiny": "Tiny",
+    }
+
+    resolution_values: Dict[str, Dict[str, List[float]]] = {
+        bucket: {agent: [] for agent in agents} for bucket in resolution_order
+    }
+    category_values: Dict[str, Dict[str, List[float]]] = {
+        bucket: {agent: [] for agent in agents} for bucket in category_order
+    }
+
+    for row in rows:
+        agent = row.get("agent")
+        if agent not in agents:
+            continue
+        value = row.get(metric_key)
+        if value is None:
+            continue
+
+        resolution_bucket = row.get("resolution_bucket")
+        if resolution_bucket in resolution_values:
+            resolution_values[resolution_bucket][agent].append(value)
+
+        for task_type in row.get("task_types", []) or []:
+            if task_type in category_values:
+                category_values[task_type][agent].append(value)
+
+    resolution_buckets = [
+        bucket
+        for bucket in resolution_order
+        if any(resolution_values[bucket][agent] for agent in agents)
+    ]
+    category_buckets = [
+        bucket
+        for bucket in category_order
+        if any(category_values[bucket][agent] for agent in agents)
+    ]
+
+    if not resolution_buckets and not category_buckets:
+        return
+
+    agent_labels = {agent: display_agent(agent) for agent in agents}
+    bar_width = 0.35
+    effective_resolution = max(len(resolution_buckets), 1)
+    effective_category = max(len(category_buckets), 1)
+    fig_width = max(10, (effective_resolution + effective_category) * 2.2)
+    fig, axes = plt.subplots(1, 2, figsize=(fig_width, 4.8), sharey=True)
+
+    def plot_axis(axis, buckets, value_map, title, xlabel, label_map):
+        if not buckets:
+            axis.axis("off")
+            return
+        x_positions = list(range(len(buckets)))
+        for idx, agent in enumerate(agents):
+            offsets = [x - bar_width / 2 + idx * bar_width for x in x_positions]
+            values = []
+            for bucket in buckets:
+                bucket_values = value_map[bucket][agent]
+                if bucket_values:
+                    values.append(sum(bucket_values) / len(bucket_values))
+                else:
+                    values.append(math.nan)
+            axis.bar(offsets, values, bar_width, label=agent_labels.get(agent, agent))
+        axis.set_xticks(range(len(buckets)))
+        axis.set_xticklabels([label_map.get(bucket, bucket.title()) for bucket in buckets])
+        axis.set_xlabel(xlabel)
+        axis.set_title(title)
+        axis.grid(axis="y", linestyle="--", alpha=0.3)
+        axis.set_ylim(bottom=0)
+
+    plot_axis(
+        axes[0],
+        resolution_buckets,
+        resolution_values,
+        "(a) Max Focal DIoU by Resolution",
+        "Resolution",
+        resolution_labels,
+    )
+    plot_axis(
+        axes[1],
+        category_buckets,
+        category_values,
+        "(b) Max Focal DIoU by Category",
+        "Category",
+        category_labels,
+    )
+
+    axes[0].set_ylabel("Max Focal DIoU")
+    legend_handles = []
+    legend_labels: List[str] = []
+    for axis in axes:
+        handles, labels = axis.get_legend_handles_labels()
+        if handles:
+            legend_handles = handles
+            legend_labels = labels
+            break
+    if legend_handles:
+        fig.legend(legend_handles, legend_labels, loc="lower center", ncol=len(agents))
+    fig.suptitle("Max Focal DIoU breakdown for selected agents")
+    fig.tight_layout(rect=(0, 0.08, 1, 1))
+    fig.savefig(output_path, dpi=200)
+    plt.close(fig)
+
+
 def main() -> None:
     args = parse_args()
     benchmark_dir = os.path.abspath(args.benchmark_dir)
@@ -433,6 +552,11 @@ def main() -> None:
             "Max Focal DIoU",
             os.path.join(output_dir, "max_focal_diou_xai_vs_openai.png"),
             {"max_focal_diou": "Max Focal DIoU"},
+        )
+        plot_focal_diou_breakdown(
+            zoom_rows,
+            zoom_agents,
+            os.path.join(output_dir, "max_focal_diou_resolution_category.png"),
         )
 
         confidence_rows = [

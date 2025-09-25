@@ -36,6 +36,8 @@ Before providing your final answer, conduct a thorough analysis where you:
 
 **Output Format:**
 
+Provide reasoning under <thinking>...</thinking>.
+
 Along with your reasoning, provide your final answer as a JSON object with the following structure:
 {
   "confidence": [score1, score2, ...],
@@ -453,6 +455,8 @@ class BboxDetectionWithGridCellPrompt(BasePrompt):
 **EDGE AMBIGUITY:** When boundaries fall within cells, snap to nearest visible edge, then cell boundary if unclear.
 
 **NO DETECTIONS FOUND:** Return {{"confidence": [], "bbox": []}}
+
+Provide reasoning under <thinking>...</thinking>.
 
 **OUTPUT:** Python dict only. Zero explanations.
         """

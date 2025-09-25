@@ -1,1768 +1,928 @@
 [
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5bf443d9-fc4f-45dd-97e2-cabf68e8aa40.png",
-      "metadata": {
-        "prompt": "detect the dimmest lamp on the left side of the image. A dim lamp is one with little to no glare",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": true,
-        "resolution": [
-          1616,
-          1600
-        ]
-      },
-      "annotations": [
-        [
-          562.46,
-          640.83,
-          60.719999999999914,
-          253.57999999999993
-        ]
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5bf443d9-fc4f-45dd-97e2-cabf68e8aa40.png",
+    "metadata": {
+      "prompt": "detect the dimmest lamp on the left side of the image. A dim lamp is one with little to no glare",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            730,
-            450,
-            100,
-            150
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 42.356439569965005,
-        "object_of_interest": "detect the dimmest lamp on the left side of the image. A dim lamp is one with little to no glare",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.04118553070725956,
-        "modified_diou": 0.34398190290181063,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": true,
+      "resolution": [
+        1616,
+        1600
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/ea8ce4fc-983f-409b-b002-258b915193cb.jpeg",
-      "metadata": {
-        "prompt": "detect for the Seattle building logo in this image",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": false,
-        "resolution": [
-          1536,
-          2048
-        ]
-      },
-      "annotations": [
-        [
-          914.53,
-          1343.37,
-          16.600000000000023,
-          61.42000000000007
-        ]
+    "annotations": [
+      [
+        562.46,
+        640.83,
+        60.719999999999914,
+        253.57999999999993
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/ea8ce4fc-983f-409b-b002-258b915193cb.jpeg",
+    "metadata": {
+      "prompt": "detect for the Seattle building logo in this image",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            868,
-            931,
-            262,
-            119
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 34.23572815582156,
-        "object_of_interest": "detect for the Seattle building logo in this image",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.0,
-        "modified_diou": 0.27583126270097336,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        1536,
+        2048
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5a7f78e9-2bf8-4da8-bc38-bfadd8d12c47.webp",
-      "metadata": {
-        "prompt": "rainbow stained splotch looking defect",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": false,
-        "resolution": [
-          640,
-          640
-        ]
-      },
-      "annotations": [
-        [
-          386.07,
-          425.62,
-          72.86000000000001,
-          62.860000000000014
-        ]
+    "annotations": [
+      [
+        914.53,
+        1343.37,
+        16.600000000000023,
+        61.42000000000007
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5a7f78e9-2bf8-4da8-bc38-bfadd8d12c47.webp",
+    "metadata": {
+      "prompt": "rainbow stained splotch looking defect",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            360,
-            375,
-            60,
-            30
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 22.24971140921116,
-        "object_of_interest": "rainbow stained splotch looking defect",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.029311387762700137,
-        "modified_diou": 0.38860650008400405,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        640,
+        640
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/14725a40-9651-4b0d-934d-e22af81a8c95.png",
-      "metadata": {
-        "prompt": "cellphone",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": false,
-        "resolution": [
-          988,
-          744
-        ]
-      },
-      "annotations": [
-        [
-          0,
-          219.1,
-          70.93,
-          80.54999999999998
-        ]
+    "annotations": [
+      [
+        386.07,
+        425.62,
+        72.86000000000001,
+        62.860000000000014
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/14725a40-9651-4b0d-934d-e22af81a8c95.png",
+    "metadata": {
+      "prompt": "cellphone",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            120,
-            130,
-            80,
-            160
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 28.379595836624503,
-        "object_of_interest": "cellphone",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.12681356839595445,
-        "modified_diou": 0.38161120349875094,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        988,
+        744
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/b98977e0-6499-4b90-85ac-b0c5e84abf8a.png",
-      "metadata": {
-        "prompt": "identify the WEF (world economic forum) logo in this image. It may be obstructed",
-        "task_type": [
-          "tiny",
-          "cua"
-        ],
-        "is_relational": false,
-        "resolution": [
-          3426,
-          2166
-        ]
-      },
-      "annotations": [
-        [
-          1265.28,
-          1533.45,
-          61.6400000000001,
-          46.039999999999964
-        ]
+    "annotations": [
+      [
+        0,
+        219.1,
+        70.93,
+        80.54999999999998
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/b98977e0-6499-4b90-85ac-b0c5e84abf8a.png",
+    "metadata": {
+      "prompt": "identify the WEF (world economic forum) logo in this image. It may be obstructed",
+      "task_type": [
+        "tiny",
+        "cua"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            1770,
-            1200,
-            90,
-            90
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 28.863206835463643,
-        "object_of_interest": "identify the WEF (world economic forum) logo in this image. It may be obstructed",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.0,
-        "modified_diou": 0.2040043872560378,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        3426,
+        2166
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/39e1b99d-861d-420a-88df-371a36b2a69c.png",
-      "metadata": {
-        "prompt": "A gap or separation defect at the interface between a white gasket/seal and the dark metal surface. You can think of it as a chip or a piece of material that is not fully attached to the gasket",
-        "task_type": [
-          "tiny"
-        ],
-        "is_relational": false,
-        "resolution": [
-          4504,
-          4504
-        ]
-      },
-      "annotations": [
-        [
-          2509.68,
-          1952.15,
-          45.01000000000022,
-          41.039999999999964
-        ]
+    "annotations": [
+      [
+        1265.28,
+        1533.45,
+        61.6400000000001,
+        46.039999999999964
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/39e1b99d-861d-420a-88df-371a36b2a69c.png",
+    "metadata": {
+      "prompt": "A gap or separation defect at the interface between a white gasket/seal and the dark metal surface. You can think of it as a chip or a piece of material that is not fully attached to the gasket",
+      "task_type": [
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            2450,
-            1900,
-            100,
-            80
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 38.27033597230911,
-        "object_of_interest": "A gap or separation defect at the interface between a white gasket/seal and the dark metal surface. You can think of it as a chip or a piece of material that is not fully attached to the gasket",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.004626184593491189,
-        "modified_diou": 0.569095552824323,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        4504,
+        4504
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5855d10b-ca07-4571-9b8e-50e4deda9fc7.png",
-      "metadata": {
-        "prompt": "mode of transportation on the right",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": true,
-        "resolution": [
-          1280,
-          960
-        ]
-      },
-      "annotations": [
-        [
-          948.04,
-          470.21,
-          101.77999999999997,
-          122.15000000000003
-        ]
+    "annotations": [
+      [
+        2509.68,
+        1952.15,
+        45.01000000000022,
+        41.039999999999964
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5855d10b-ca07-4571-9b8e-50e4deda9fc7.png",
+    "metadata": {
+      "prompt": "mode of transportation on the right",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            950,
-            460,
-            200,
-            360
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 36.16509133204818,
-        "object_of_interest": "mode of transportation on the right",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.2973234287320067,
-        "modified_diou": 0.6148783996776384,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": true,
+      "resolution": [
+        1280,
+        960
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5171c79f-5f4c-4781-b733-16beb0762ebe.jpeg",
-      "metadata": {
-        "prompt": "tiny ship cruising by the ocean",
-        "task_type": [
-          "tiny"
-        ],
-        "is_relational": false,
-        "resolution": [
-          1024,
-          768
-        ]
-      },
-      "annotations": [
-        [
-          899.13,
-          375.43,
-          50.02999999999997,
-          24.629999999999995
-        ]
+    "annotations": [
+      [
+        948.04,
+        470.21,
+        101.77999999999997,
+        122.15000000000003
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5171c79f-5f4c-4781-b733-16beb0762ebe.jpeg",
+    "metadata": {
+      "prompt": "tiny ship cruising by the ocean",
+      "task_type": [
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            910,
-            260,
-            75,
-            36
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 32.51614188030362,
-        "object_of_interest": "tiny ship cruising by the ocean",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.039346098102317144,
-        "modified_diou": 0.29673102097611126,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        1024,
+        768
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/16f23f13-b97a-47c4-8364-6912db1ff3b0.jpeg",
-      "metadata": {
-        "prompt": "detect just the water bottle held by the man with a beard in black shirt behind the woman anchor wearing a pink shirt",
-        "task_type": [
-          "tiny"
-        ],
-        "is_relational": true,
-        "resolution": [
-          1024,
-          768
-        ]
-      },
-      "annotations": [
-        [
-          609.76,
-          437.56,
-          36.90999999999997,
-          41.81999999999999
-        ]
+    "annotations": [
+      [
+        899.13,
+        375.43,
+        50.02999999999997,
+        24.629999999999995
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/16f23f13-b97a-47c4-8364-6912db1ff3b0.jpeg",
+    "metadata": {
+      "prompt": "detect just the water bottle held by the man with a beard in black shirt behind the woman anchor wearing a pink shirt",
+      "task_type": [
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            560,
-            350,
-            35,
-            80
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 49.57910979539156,
-        "object_of_interest": "detect just the water bottle held by the man with a beard in black shirt behind the woman anchor wearing a pink shirt",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.033442388883858865,
-        "modified_diou": 0.3649722604922034,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": true,
+      "resolution": [
+        1024,
+        768
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/4bc33a10-a766-4106-ad0a-f5a1f02f5531.jpeg",
-      "metadata": {
-        "prompt": "find ingrown hair on this person",
-        "task_type": [
-          "tiny"
-        ],
-        "is_relational": false,
-        "resolution": [
-          768,
-          1024
-        ]
-      },
-      "annotations": [
-        [
-          440.47,
-          680.08,
-          38.599999999999966,
-          41.99000000000001
-        ]
+    "annotations": [
+      [
+        609.76,
+        437.56,
+        36.90999999999997,
+        41.81999999999999
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/4bc33a10-a766-4106-ad0a-f5a1f02f5531.jpeg",
+    "metadata": {
+      "prompt": "find ingrown hair on this person",
+      "task_type": [
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            560,
-            510,
-            80,
-            80
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 39.86648082733154,
-        "object_of_interest": "find ingrown hair on this person",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.0172661835440192,
-        "modified_diou": 0.28351825347745085,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        768,
+        1024
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5e61b102-a5ba-4fc0-bf93-29504b34c12e.jpeg",
-      "metadata": {
-        "prompt": "detect just the water bottle held by the man",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": false,
-        "resolution": [
-          1182,
-          665
-        ]
-      },
-      "annotations": [
-        [
-          635.01,
-          384.47,
-          33.620000000000005,
-          25.519999999999982
-        ]
+    "annotations": [
+      [
+        440.47,
+        680.08,
+        38.599999999999966,
+        41.99000000000001
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5e61b102-a5ba-4fc0-bf93-29504b34c12e.jpeg",
+    "metadata": {
+      "prompt": "detect just the water bottle held by the man",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            600,
-            320,
-            120,
-            60
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 33.849736765027046,
-        "object_of_interest": "detect just the water bottle held by the man",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.09213879197935503,
-        "modified_diou": 0.4529080697685482,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        1182,
+        665
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5057ec5e-3dd2-4b5b-ac26-8a360756f38b.jpeg",
-      "metadata": {
-        "prompt": "detect for the burnt mark on the voltage connector",
-        "task_type": [
-          "tiny"
-        ],
-        "is_relational": true,
-        "resolution": [
-          768,
-          1024
-        ]
-      },
-      "annotations": [
-        [
-          190.41,
-          715.36,
-          79.23999999999998,
-          134.60000000000002
-        ]
+    "annotations": [
+      [
+        635.01,
+        384.47,
+        33.620000000000005,
+        25.519999999999982
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5057ec5e-3dd2-4b5b-ac26-8a360756f38b.jpeg",
+    "metadata": {
+      "prompt": "detect for the burnt mark on the voltage connector",
+      "task_type": [
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            310,
-            430,
-            70,
-            80
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 27.051739286631346,
-        "object_of_interest": "detect for the burnt mark on the voltage connector",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.0,
-        "modified_diou": 0.27548067238488794,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": true,
+      "resolution": [
+        768,
+        1024
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/a2fb7445-249f-4487-a57e-dcff5cda80b0.jpg",
-      "metadata": {
-        "prompt": "click on the printer icon with a magnifier",
-        "task_type": [
-          "cua",
-          "tiny"
-        ],
-        "is_relational": false,
-        "resolution": [
-          1920,
-          1080
-        ]
-      },
-      "annotations": [
-        [
-          273.4,
-          88.38,
-          54.18000000000001,
-          42.349999999999994
-        ]
+    "annotations": [
+      [
+        190.41,
+        715.36,
+        79.23999999999998,
+        134.60000000000002
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/a2fb7445-249f-4487-a57e-dcff5cda80b0.jpg",
+    "metadata": {
+      "prompt": "click on the printer icon with a magnifier",
+      "task_type": [
+        "cua",
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            280,
-            76,
-            32,
-            32
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 43.99507430754602,
-        "object_of_interest": "click on the printer icon with a magnifier",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.004963123050608011,
-        "modified_diou": 0.6815565899961746,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        1920,
+        1080
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/b95dec63-c980-4315-b892-0274e1b8ab15.jpg",
-      "metadata": {
-        "prompt": "click on the curved blue up-down arrow",
-        "task_type": [
-          "cua"
-        ],
-        "is_relational": false,
-        "resolution": [
-          1920,
-          1080
-        ]
-      },
-      "annotations": [
-        [
-          1665.13,
-          422.41,
-          94.17999999999984,
-          96.14999999999992
-        ]
+    "annotations": [
+      [
+        273.4,
+        88.38,
+        54.18000000000001,
+        42.349999999999994
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/b95dec63-c980-4315-b892-0274e1b8ab15.jpg",
+    "metadata": {
+      "prompt": "click on the curved blue up-down arrow",
+      "task_type": [
+        "cua"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            1710,
-            130,
-            60,
-            60
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 46.85095261968672,
-        "object_of_interest": "click on the curved blue up-down arrow",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.0,
-        "modified_diou": 0.2478991895132139,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        1920,
+        1080
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/3c44c910-348f-4c00-b186-3c9b991e41d6.jpg",
-      "metadata": {
-        "prompt": "click on the VScode icon",
-        "task_type": [
-          "cua"
-        ],
-        "is_relational": false,
-        "resolution": [
-          1920,
-          1080
-        ]
-      },
-      "annotations": [
-        [
-          2.69,
-          159.05,
-          63.24000000000001,
-          80.72999999999999
-        ]
+    "annotations": [
+      [
+        1665.13,
+        422.41,
+        94.17999999999984,
+        96.14999999999992
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/3c44c910-348f-4c00-b186-3c9b991e41d6.jpg",
+    "metadata": {
+      "prompt": "click on the VScode icon",
+      "task_type": [
+        "cua"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            8,
-            222,
-            64,
-            64
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 37.51571812853217,
-        "object_of_interest": "click on the VScode icon",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.01793398518617446,
-        "modified_diou": 0.549842933389342,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        1920,
+        1080
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/48a8a0e6-324a-4167-aa18-ff98f7a63687.jpg",
-      "metadata": {
-        "prompt": "choose the most recent color from dropdown",
-        "task_type": [
-          "cua"
-        ],
-        "is_relational": true,
-        "resolution": [
-          1920,
-          1080
-        ]
-      },
-      "annotations": [
-        [
-          816.86,
-          658.98,
-          56.73000000000002,
-          20.610000000000014
-        ]
+    "annotations": [
+      [
+        2.69,
+        159.05,
+        63.24000000000001,
+        80.72999999999999
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/48a8a0e6-324a-4167-aa18-ff98f7a63687.jpg",
+    "metadata": {
+      "prompt": "choose the most recent color from dropdown",
+      "task_type": [
+        "cua"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            890,
-            580,
-            40,
-            30
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 48.43466607667506,
-        "object_of_interest": "choose the most recent color from dropdown",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.00607886582839448,
-        "modified_diou": 0.311950006211155,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": true,
+      "resolution": [
+        1920,
+        1080
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/68e22166-15db-4f96-9bd4-eeae36d0e74e.jpg",
-      "metadata": {
-        "prompt": "i would like to play a video i downloaded on my computer. Detect the app on the toolbar on the left i can use to play the video.",
-        "task_type": [
-          "cua"
-        ],
-        "is_relational": true,
-        "resolution": [
-          1280,
-          720
-        ]
-      },
-      "annotations": [
-        [
-          0,
-          225.33,
-          70.86,
-          82.53
-        ]
+    "annotations": [
+      [
+        816.86,
+        658.98,
+        56.73000000000002,
+        20.610000000000014
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/68e22166-15db-4f96-9bd4-eeae36d0e74e.jpg",
+    "metadata": {
+      "prompt": "i would like to play a video i downloaded on my computer. Detect the app on the toolbar on the left i can use to play the video.",
+      "task_type": [
+        "cua"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            15,
-            256,
-            48,
-            48
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 37.11140241287649,
-        "object_of_interest": "i would like to play a video i downloaded on my computer. Detect the app on the toolbar on the left i can use to play the video.",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.019173895412482246,
-        "modified_diou": 0.806530556172241,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": true,
+      "resolution": [
+        1280,
+        720
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/be5b35ad-946f-4f28-8e1c-3edb81fd48e9.jpg",
-      "metadata": {
-        "prompt": "click on the text that is detected with grammar error.",
-        "task_type": [
-          "cua"
-        ],
-        "is_relational": true,
-        "resolution": [
-          1920,
-          1080
-        ]
-      },
-      "annotations": [
-        [
-          682.16,
-          628.62,
-          100.91000000000008,
-          60.549999999999955
-        ]
+    "annotations": [
+      [
+        0,
+        225.33,
+        70.86,
+        82.53
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/be5b35ad-946f-4f28-8e1c-3edb81fd48e9.jpg",
+    "metadata": {
+      "prompt": "click on the text that is detected with grammar error.",
+      "task_type": [
+        "cua"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            500,
-            380,
-            80,
-            30
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 30.589685386046767,
-        "object_of_interest": "click on the text that is detected with grammar error.",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.0,
-        "modified_diou": 0.24530409323316113,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": true,
+      "resolution": [
+        1920,
+        1080
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/79957d30-ce6f-4500-ae6b-0bc61210f6f0.jpg",
-      "metadata": {
-        "prompt": "maximize the terminal window.",
-        "task_type": [
-          "cua"
-        ],
-        "is_relational": false,
-        "resolution": [
-          1280,
-          720
-        ]
-      },
-      "annotations": [
-        [
-          950.81,
-          94.37,
-          52.020000000000095,
-          49.34
-        ]
+    "annotations": [
+      [
+        682.16,
+        628.62,
+        100.91000000000008,
+        60.549999999999955
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/79957d30-ce6f-4500-ae6b-0bc61210f6f0.jpg",
+    "metadata": {
+      "prompt": "maximize the terminal window.",
+      "task_type": [
+        "cua"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            894,
-            66,
-            24,
-            24
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 42.72402499988675,
-        "object_of_interest": "maximize the terminal window.",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.0056012675388376985,
-        "modified_diou": 0.3333442254625016,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        1280,
+        720
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/1464e5c1-c821-42e2-9c39-392abc932ccb.jpg",
-      "metadata": {
-        "prompt": "minimize the terminal window.",
-        "task_type": [
-          "cua"
-        ],
-        "is_relational": false,
-        "resolution": [
-          1280,
-          720
-        ]
-      },
-      "annotations": [
-        [
-          911.02,
-          98.63,
-          55.50999999999999,
-          40.27000000000001
-        ]
+    "annotations": [
+      [
+        950.81,
+        94.37,
+        52.020000000000095,
+        49.34
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/1464e5c1-c821-42e2-9c39-392abc932ccb.jpg",
+    "metadata": {
+      "prompt": "minimize the terminal window.",
+      "task_type": [
+        "cua"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            793,
-            45,
-            30,
-            30
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 36.83139728009701,
-        "object_of_interest": "minimize the terminal window.",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.008911245094937568,
-        "modified_diou": 0.2735229076177374,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        1280,
+        720
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/7b3997f5-f576-4c47-9b2c-9f5fa35a4f31.jpg",
-      "metadata": {
-        "prompt": "i want to view the password input",
-        "task_type": [
-          "cua"
-        ],
-        "is_relational": false,
-        "resolution": [
-          1280,
-          720
-        ]
-      },
-      "annotations": [
-        [
-          742.7,
-          418.19,
-          69.96999999999991,
-          46.639999999999986
-        ]
+    "annotations": [
+      [
+        911.02,
+        98.63,
+        55.50999999999999,
+        40.27000000000001
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/7b3997f5-f576-4c47-9b2c-9f5fa35a4f31.jpg",
+    "metadata": {
+      "prompt": "i want to view the password input",
+      "task_type": [
+        "cua"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            490,
-            370,
-            300,
-            45
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 28.736200749874115,
-        "object_of_interest": "i want to view the password input",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.07263295404909696,
-        "modified_diou": 0.41354027164550095,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        1280,
+        720
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/e18ad11d-0532-4e60-b498-d2b09472b002.jpg",
-      "metadata": {
-        "prompt": "detect the button that once clicked will favorite the current website",
-        "task_type": [
-          "cua"
-        ],
-        "is_relational": false,
-        "resolution": [
-          1280,
-          720
-        ]
-      },
-      "annotations": [
-        [
-          1136.48,
-          63.88,
-          69.97000000000003,
-          50.23
-        ]
+    "annotations": [
+      [
+        742.7,
+        418.19,
+        69.96999999999991,
+        46.639999999999986
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/e18ad11d-0532-4e60-b498-d2b09472b002.jpg",
+    "metadata": {
+      "prompt": "detect the button that once clicked will favorite the current website",
+      "task_type": [
+        "cua"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            1130,
-            100,
-            32,
-            32
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 45.934091726318,
-        "object_of_interest": "detect the button that once clicked will favorite the current website",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.011481048585156074,
-        "modified_diou": 0.5189306221538846,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        1280,
+        720
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/d55767b7-52ae-4d60-8666-de3775d4deeb.jpeg",
-      "metadata": {
-        "prompt": "detect just the Salesforce tower building",
-        "task_type": [
-          "tiny"
-        ],
-        "is_relational": false,
-        "resolution": [
-          1536,
-          2048
-        ]
-      },
-      "annotations": [
-        [
-          688.26,
-          1095.14,
-          57.289999999999964,
-          132.6199999999999
-        ]
+    "annotations": [
+      [
+        1136.48,
+        63.88,
+        69.97000000000003,
+        50.23
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/d55767b7-52ae-4d60-8666-de3775d4deeb.jpeg",
+    "metadata": {
+      "prompt": "detect just the Salesforce tower building",
+      "task_type": [
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            790,
-            640,
-            100,
-            300
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 50.75572928786278,
-        "object_of_interest": "detect just the Salesforce tower building",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.025427081705167567,
-        "modified_diou": 0.32440622605881186,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        1536,
+        2048
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/91238336-4fa1-424d-a7c2-20899e20d5e6.jpeg",
-      "metadata": {
-        "prompt": "detect the safety cone",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": false,
-        "resolution": [
-          1536,
-          2048
-        ]
-      },
-      "annotations": [
-        [
-          826.29,
-          1126.55,
-          221.71000000000004,
-          244.58000000000015
-        ]
+    "annotations": [
+      [
+        688.26,
+        1095.14,
+        57.289999999999964,
+        132.6199999999999
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/91238336-4fa1-424d-a7c2-20899e20d5e6.jpeg",
+    "metadata": {
+      "prompt": "detect the safety cone",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            830,
-            900,
-            180,
-            360
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 36.33388273231685,
-        "object_of_interest": "detect the safety cone",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.12058711817860149,
-        "modified_diou": 0.6767732123255077,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        1536,
+        2048
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/85494652-b849-49ef-8107-d44e4f0409b4.png",
-      "metadata": {
-        "prompt": "detect the white '20 speed limit' sign.",
-        "task_type": [
-          "tiny"
-        ],
-        "is_relational": false,
-        "resolution": [
-          3024,
-          4032
-        ]
-      },
-      "annotations": [
-        [
-          1253.18,
-          1710.85,
-          97.98000000000002,
-          106.67000000000007
-        ]
+    "annotations": [
+      [
+        826.29,
+        1126.55,
+        221.71000000000004,
+        244.58000000000015
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/85494652-b849-49ef-8107-d44e4f0409b4.png",
+    "metadata": {
+      "prompt": "detect the white '20 speed limit' sign.",
+      "task_type": [
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            1450,
-            1570,
-            120,
-            140
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 38.66923317313194,
-        "object_of_interest": "detect the white '20 speed limit' sign.",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.014184008832167512,
-        "modified_diou": 0.3383047985664415,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        3024,
+        4032
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/98812840-2504-4c58-ba34-b09986a30748.png",
-      "metadata": {
-        "prompt": "detect Nikola Tesla's poster on his patent on coil induction.",
-        "task_type": [
-          "tiny"
-        ],
-        "is_relational": false,
-        "resolution": [
-          4284,
-          5712
-        ]
-      },
-      "annotations": [
-        [
-          2140.39,
-          2634.29,
-          641.77,
-          774.75
-        ]
+    "annotations": [
+      [
+        1253.18,
+        1710.85,
+        97.98000000000002,
+        106.67000000000007
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/98812840-2504-4c58-ba34-b09986a30748.png",
+    "metadata": {
+      "prompt": "detect Nikola Tesla's poster on his patent on coil induction.",
+      "task_type": [
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            2450,
-            1300,
-            350,
-            550
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 28.694576563313603,
-        "object_of_interest": "detect Nikola Tesla's poster on his patent on coil induction.",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.0,
-        "modified_diou": 0.3093759863395127,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        4284,
+        5712
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/f3b148ad-193e-43cd-b188-370d5ad354ab.jpg",
-      "metadata": {
-        "prompt": "detect the hot air balloon",
-        "task_type": [
-          "tiny"
-        ],
-        "is_relational": false,
-        "resolution": [
-          1152,
-          768
-        ]
-      },
-      "annotations": [
-        [
-          556.71,
-          179.89,
-          104.57999999999993,
-          122.57
-        ]
+    "annotations": [
+      [
+        2140.39,
+        2634.29,
+        641.77,
+        774.75
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/f3b148ad-193e-43cd-b188-370d5ad354ab.jpg",
+    "metadata": {
+      "prompt": "detect the hot air balloon",
+      "task_type": [
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            520,
-            140,
-            60,
-            100
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 32.71610973030329,
-        "object_of_interest": "detect the hot air balloon",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.041667745803411115,
-        "modified_diou": 0.5134821671617321,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        1152,
+        768
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/ae956e5c-1b90-452b-8f02-07955c070204.jpg",
-      "metadata": {
-        "prompt": "detect the closest car",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": true,
-        "resolution": [
-          768,
-          1152
-        ]
-      },
-      "annotations": [
-        [
-          490.07,
-          700.54,
-          199.29000000000002,
-          191.57000000000005
-        ]
+    "annotations": [
+      [
+        556.71,
+        179.89,
+        104.57999999999993,
+        122.57
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/ae956e5c-1b90-452b-8f02-07955c070204.jpg",
+    "metadata": {
+      "prompt": "detect the closest car",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            760,
-            480,
-            360,
-            240
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 28.505504170432687,
-        "object_of_interest": "detect the closest car",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.004464265450863336,
-        "modified_diou": 0.37134991132047396,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": true,
+      "resolution": [
+        768,
+        1152
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/415f17da-c779-47a8-b295-b0e13798083a.jpg",
-      "metadata": {
-        "prompt": "something you'd write with",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": true,
-        "resolution": [
-          1152,
-          768
-        ]
-      },
-      "annotations": [
-        [
-          231.86,
-          612.74,
-          192.84999999999997,
-          140.56999999999994
-        ]
+    "annotations": [
+      [
+        490.07,
+        700.54,
+        199.29000000000002,
+        191.57000000000005
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/415f17da-c779-47a8-b295-b0e13798083a.jpg",
+    "metadata": {
+      "prompt": "something you'd write with",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            310,
-            600,
-            140,
-            80
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 25.8381094224751,
-        "object_of_interest": "something you'd write with",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.08467650110135021,
-        "modified_diou": 0.6932445116984124,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": true,
+      "resolution": [
+        1152,
+        768
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/3118d81a-5c84-4a68-a992-80ddf3598b7e.jpg",
-      "metadata": {
-        "prompt": "detect the ear of the person on the right. if there's only one person, detect their right ear.",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": true,
-        "resolution": [
-          1152,
-          768
-        ]
-      },
-      "annotations": [
-        [
-          798.43,
-          146.46,
-          143.1400000000001,
-          173.99999999999997
-        ]
+    "annotations": [
+      [
+        231.86,
+        612.74,
+        192.84999999999997,
+        140.56999999999994
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/3118d81a-5c84-4a68-a992-80ddf3598b7e.jpg",
+    "metadata": {
+      "prompt": "detect the ear of the person on the right. if there's only one person, detect their right ear.",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            720,
-            100,
-            60,
-            120
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 28.639021556824446,
-        "object_of_interest": "detect the ear of the person on the right. if there's only one person, detect their right ear.",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.03999520057593088,
-        "modified_diou": 0.4073646994985916,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": true,
+      "resolution": [
+        1152,
+        768
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/4e1685bc-3878-4339-88f9-49d459db0fac.jpg",
-      "metadata": {
-        "prompt": "detect the person that is closest to the camera (where this picture was taken from)",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": true,
-        "resolution": [
-          768,
-          1152
-        ]
-      },
-      "annotations": [
-        [
-          314.57,
-          646.54,
-          78.43,
-          270.0
-        ]
+    "annotations": [
+      [
+        798.43,
+        146.46,
+        143.1400000000001,
+        173.99999999999997
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/4e1685bc-3878-4339-88f9-49d459db0fac.jpg",
+    "metadata": {
+      "prompt": "detect the person that is closest to the camera (where this picture was taken from)",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            470,
-            300,
-            160,
-            420
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 35.18000070750713,
-        "object_of_interest": "detect the person that is closest to the camera (where this picture was taken from)",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.04812332613757714,
-        "modified_diou": 0.3934305845770307,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": true,
+      "resolution": [
+        768,
+        1152
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/4dd34c6d-08e2-4777-b633-452189379693.jpg",
-      "metadata": {
-        "prompt": "the number 294",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": false,
-        "resolution": [
-          1344,
-          768
-        ]
-      },
-      "annotations": [
-        [
-          569.81,
-          312.3,
-          88.53000000000009,
-          52.74000000000001
-        ]
+    "annotations": [
+      [
+        314.57,
+        646.54,
+        78.43,
+        270.0
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/4dd34c6d-08e2-4777-b633-452189379693.jpg",
+    "metadata": {
+      "prompt": "the number 294",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            605,
-            295,
-            85,
-            75
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 30.353496860712767,
-        "object_of_interest": "the number 294",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.050248962049163605,
-        "modified_diou": 0.760985721021083,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        1344,
+        768
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/1a359a02-0085-46f1-8bfc-32528a3d9813.jpg",
-      "metadata": {
-        "prompt": "detect the runner who hasn't yet finished the race",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": true,
-        "resolution": [
-          1344,
-          768
-        ]
-      },
-      "annotations": [
-        [
-          308.56,
-          290.13,
-          107.44,
-          241.14999999999998
-        ]
+    "annotations": [
+      [
+        569.81,
+        312.3,
+        88.53000000000009,
+        52.74000000000001
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/1a359a02-0085-46f1-8bfc-32528a3d9813.jpg",
+    "metadata": {
+      "prompt": "detect the runner who hasn't yet finished the race",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            330,
-            260,
-            100,
-            260
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 26.625496787950397,
-        "object_of_interest": "detect the runner who hasn't yet finished the race",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.125360474043111,
-        "modified_diou": 0.9055298249670186,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": true,
+      "resolution": [
+        1344,
+        768
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/b08cc921-db41-444a-aacb-c7a258caa9c4.jpg",
-      "metadata": {
-        "prompt": "Where's Waldo",
-        "task_type": [
-          "tiny"
-        ],
-        "is_relational": false,
-        "resolution": [
-          1024,
-          768
-        ]
-      },
-      "annotations": [
-        [
-          130.1,
-          118.25,
-          95.49000000000001,
-          93.28999999999999
-        ]
+    "annotations": [
+      [
+        308.56,
+        290.13,
+        107.44,
+        241.14999999999998
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/b08cc921-db41-444a-aacb-c7a258caa9c4.jpg",
+    "metadata": {
+      "prompt": "Where's Waldo",
+      "task_type": [
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            860,
-            620,
-            100,
-            150
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 38.200868004933,
-        "object_of_interest": "Where's Waldo",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.0,
-        "modified_diou": 0.2046509331564882,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        1024,
+        768
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/43928646-cad0-4f05-a7c6-ffff9f93abbc.png",
-      "metadata": {
-        "prompt": "Super focus thumbnail",
-        "task_type": [
-          "tiny"
-        ],
-        "is_relational": false,
-        "resolution": [
-          3024,
-          4032
-        ]
-      },
-      "annotations": [
-        [
-          2558.75,
-          2455.99,
-          465.25,
-          272.0
-        ]
+    "annotations": [
+      [
+        130.1,
+        118.25,
+        95.49000000000001,
+        93.28999999999999
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/43928646-cad0-4f05-a7c6-ffff9f93abbc.png",
+    "metadata": {
+      "prompt": "Super focus thumbnail",
+      "task_type": [
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            2600,
-            2650,
-            350,
-            180
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 40.345101680606604,
-        "object_of_interest": "Super focus thumbnail",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.05226140491099592,
-        "modified_diou": 0.6241842788656314,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        3024,
+        4032
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5e37e046-f4da-4912-85e4-c0050c41462b.jpg",
-      "metadata": {
-        "prompt": "Detect just the bonnet",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": false,
-        "resolution": [
-          160,
-          213
-        ]
-      },
-      "annotations": [
-        [
-          37.8,
-          23.74,
-          84.87,
-          82.97
-        ]
+    "annotations": [
+      [
+        2558.75,
+        2455.99,
+        465.25,
+        272.0
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5e37e046-f4da-4912-85e4-c0050c41462b.jpg",
+    "metadata": {
+      "prompt": "Detect just the bonnet",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            48,
-            15,
-            64,
-            60
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 30.73358876258135,
-        "object_of_interest": "Detect just the bonnet",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.20786707705906995,
-        "modified_diou": 0.8246919437302905,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        160,
+        213
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/ca9c72e3-2ed6-42dd-a2e0-f253a4c0c5f2.webp",
-      "metadata": {
-        "prompt": "detect the avocado toy, which is next to the spaceman toy, and on the left of the red tomato toy",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": true,
-        "resolution": [
-          3000,
-          1963
-        ]
-      },
-      "annotations": [
-        [
-          254.5,
-          387.49,
-          210.32,
-          214.70000000000005
-        ]
+    "annotations": [
+      [
+        37.8,
+        23.74,
+        84.87,
+        82.97
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/ca9c72e3-2ed6-42dd-a2e0-f253a4c0c5f2.webp",
+    "metadata": {
+      "prompt": "detect the avocado toy, which is next to the spaceman toy, and on the left of the red tomato toy",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            220,
-            180,
-            150,
-            160
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 66.15523871593177,
-        "object_of_interest": "detect the avocado toy, which is next to the spaceman toy, and on the left of the red tomato toy",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.029728157404806378,
-        "modified_diou": 0.3867881309967282,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": true,
+      "resolution": [
+        3000,
+        1963
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/e071f46c-a7c4-4e65-bba0-0064783650e6.jpg",
-      "metadata": {
-        "prompt": "something you'd play ping poing with",
-        "task_type": [
-          "general"
-        ],
-        "is_relational": true,
-        "resolution": [
-          768,
-          1024
-        ]
-      },
-      "annotations": [
-        [
-          449.19,
-          662.69,
-          190.57999999999998,
-          97.1099999999999
-        ]
+    "annotations": [
+      [
+        254.5,
+        387.49,
+        210.32,
+        214.70000000000005
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/e071f46c-a7c4-4e65-bba0-0064783650e6.jpg",
+    "metadata": {
+      "prompt": "something you'd play ping poing with",
+      "task_type": [
+        "general"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            580,
-            480,
-            350,
-            80
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 34.024808287620544,
-        "object_of_interest": "something you'd play ping poing with",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.023314726926713422,
-        "modified_diou": 0.3814064074350105,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": true,
+      "resolution": [
+        768,
+        1024
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/87fce78c-8d52-4fc8-8fed-c39ced07d70c.png",
-      "metadata": {
-        "prompt": "bright yellow bottle",
-        "task_type": [
-          "tiny"
-        ],
-        "is_relational": false,
-        "resolution": [
-          988,
-          744
-        ]
-      },
-      "annotations": [
-        [
-          732.73,
-          277.23,
-          67.25999999999999,
-          97.97999999999996
-        ]
+    "annotations": [
+      [
+        449.19,
+        662.69,
+        190.57999999999998,
+        97.1099999999999
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/87fce78c-8d52-4fc8-8fed-c39ced07d70c.png",
+    "metadata": {
+      "prompt": "bright yellow bottle",
+      "task_type": [
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            778,
-            280,
-            28,
-            95
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 37.43315962329507,
-        "object_of_interest": "bright yellow bottle",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.02529906760153202,
-        "modified_diou": 0.7306494758834338,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        988,
+        744
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/a077b062-df79-4b28-a839-65dc4fc02e72.jpg",
-      "metadata": {
-        "prompt": "Myer's bottle soap",
-        "task_type": [
-          "tiny"
-        ],
-        "is_relational": false,
-        "resolution": [
-          3024,
-          4032
-        ]
-      },
-      "annotations": [
-        [
-          377.08,
-          2212.99,
-          324.00000000000006,
-          366.6700000000001
-        ]
+    "annotations": [
+      [
+        732.73,
+        277.23,
+        67.25999999999999,
+        97.97999999999996
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/a077b062-df79-4b28-a839-65dc4fc02e72.jpg",
+    "metadata": {
+      "prompt": "Myer's bottle soap",
+      "task_type": [
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            250,
-            1800,
-            150,
-            450
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 41.440844751894474,
-        "object_of_interest": "Myer's bottle soap",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.038092600233058986,
-        "modified_diou": 0.4008386756568745,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        3024,
+        4032
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/a0af136b-54c9-4ca9-b333-96da7e85d031.jpg",
-      "metadata": {
-        "prompt": "where's waldo",
-        "task_type": [
-          "tiny"
-        ],
-        "is_relational": false,
-        "resolution": [
-          2560,
-          1600
-        ]
-      },
-      "annotations": [
-        [
-          1538.31,
-          540.56,
-          125.72000000000003,
-          145.45000000000005
-        ]
+    "annotations": [
+      [
+        377.08,
+        2212.99,
+        324.00000000000006,
+        366.6700000000001
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/a0af136b-54c9-4ca9-b333-96da7e85d031.jpg",
+    "metadata": {
+      "prompt": "where's waldo",
+      "task_type": [
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            1140,
-            920,
-            120,
-            240
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 32.26559707522392,
-        "object_of_interest": "where's waldo",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.0007560918403354208,
-        "modified_diou": 0.27608454414961897,
-        "max_focal_diou": 0.0
-      }
+      "is_relational": false,
+      "resolution": [
+        2560,
+        1600
+      ]
     },
-    {
-      "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/54709173-9415-4419-bb6d-0a46b37648ec.jpg",
-      "metadata": {
-        "prompt": "detect the tiny orange Y Combinator logo on this person's jacket",
-        "task_type": [
-          "tiny"
-        ],
-        "is_relational": true,
-        "resolution": [
-          3456,
-          2066
-        ]
-      },
-      "annotations": [
-        [
-          1656.5,
-          1257.72,
-          55.309999999999945,
-          47.24000000000001
-        ]
+    "annotations": [
+      [
+        1538.31,
+        540.56,
+        125.72000000000003,
+        145.45000000000005
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/54709173-9415-4419-bb6d-0a46b37648ec.jpg",
+    "metadata": {
+      "prompt": "detect the tiny orange Y Combinator logo on this person's jacket",
+      "task_type": [
+        "tiny"
       ],
-      "model_outputs": {
-        "bboxs": [
-          [
-            1340,
-            880,
-            50,
-            50
-          ]
-        ],
-        "crop_metadata": {},
-        "total_time": 55.517129151150584,
-        "object_of_interest": "detect the tiny orange Y Combinator logo on this person's jacket",
-        "task_type": "openai_vanilla_reasoning",
-        "task_kwargs": {}
-      },
-      "metrics": {
-        "iou": 0.003799610372285199,
-        "modified_diou": 0.19578714734886807,
-        "max_focal_diou": 0.0
-      }
-    }
-  ]
+      "is_relational": true,
+      "resolution": [
+        3456,
+        2066
+      ]
+    },
+    "annotations": [
+      [
+        1656.5,
+        1257.72,
+        55.309999999999945,
+        47.24000000000001
+      ]
+    ]
+  }
+]

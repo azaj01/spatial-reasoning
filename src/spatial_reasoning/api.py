@@ -51,7 +51,7 @@ class DetectionAPI:
             if self._agents["xai"]:
                 self._tasks.update({
                     "xai_advanced_reasoning": AdvancedReasoningModelTask(self._agents["xai"]),
-                    "xai_vanilla_reasoning": VanillaReasoningModelTask(self._agents["xai"], prompt_type="advanced"),
+                    "xai_vanilla_reasoning": VanillaReasoningModelTask(self._agents["xai"], prompt_type="vanilla"),
                 })
 
             self._initialized = True
@@ -185,3 +185,5 @@ def save_outputs_to_disk(folder: str, result: Dict) -> None:
             _save(f"overlay_{i}.jpg", overlay)
 
     print(f"Outputs saved to: {folder}")
+
+
