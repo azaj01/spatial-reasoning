@@ -220,7 +220,7 @@ def plot_grouped_metrics(
     output_path: str,
     metric_labels: Optional[Dict[str, str]] = None,
 ) -> None:
-    metric_labels = metric_labels or {"iou": "IoU", "diou": "DIoU"}
+    metric_labels = metric_labels or {"diou": "DIoU"}
     agents = list(data.keys())
     if not agents:
         return
@@ -273,7 +273,7 @@ def plot_confidence_accuracy(
     bucket_agent_metrics: Dict[str, Dict[str, Dict[str, Optional[float]]]],
     agents: List[str],
     output_path: str,
-    title: str = "Model confidence vs Accuracy Analysis",
+    title: str = "Model confidence vs DIoU Analysis",
 ) -> None:
     bucket_sequence = ["<70%", "70-80%", "80-90%", "90-100%"]
     buckets = []
@@ -282,9 +282,8 @@ def plot_confidence_accuracy(
         if not agent_metrics:
             continue
         if any(
-            agent_metrics.get(agent, {}).get(metric) is not None
+            agent_metrics.get(agent, {}).get("diou") is not None
             for agent in agents
-            for metric in ("iou", "diou")
         ):
             buckets.append(bucket)
     if not buckets:
@@ -292,44 +291,45 @@ def plot_confidence_accuracy(
 
     agent_labels = {agent: display_agent(agent) for agent in agents}
 
-    fig, axes = plt.subplots(1, 2, figsize=(max(10, len(buckets) * 3.2), 4.8), sharey=True)
-    metrics = [("iou", "(a) IoU Scores"), ("diou", "(b) DIoU Scores")]
-    bar_width = 0.35
     x_positions = list(range(len(buckets)))
+    bar_width = 0.35
+    fig_width = max(8, len(buckets) * 2.5)
+    fig, ax = plt.subplots(figsize=(fig_width, 4.8))
 
-    for axis, (metric_key, subplot_title) in zip(axes, metrics):
-        for idx, agent in enumerate(agents):
-            offsets = [
-                x - bar_width / 2 + idx * bar_width
-                for x in x_positions
-            ]
-            values = []
-            for bucket in buckets:
-                value = (
-                    bucket_agent_metrics.get(bucket, {})
-                    .get(agent, {})
-                    .get(metric_key)
-                )
-                values.append(value if value is not None else math.nan)
-            axis.bar(
-                offsets,
-                values,
-                bar_width,
-                label=agent_labels.get(agent, agent),
-                alpha=0.85,
+    for idx, agent in enumerate(agents):
+        offsets = [
+            x - bar_width * (len(agents) - 1) / 2 + idx * bar_width
+            for x in x_positions
+        ]
+        values = []
+        for bucket in buckets:
+            value = (
+                bucket_agent_metrics.get(bucket, {})
+                .get(agent, {})
+                .get("diou")
             )
+            values.append(value if value is not None else math.nan)
+        ax.bar(
+            offsets,
+            values,
+            bar_width,
+            label=agent_labels.get(agent, agent),
+            alpha=0.85,
+        )
 
-        axis.set_xticks(x_positions)
-        axis.set_xticklabels(buckets)
-        axis.set_xlabel("Confidence bucket")
-        axis.set_title(subplot_title)
-        axis.grid(axis="y", linestyle="--", alpha=0.3)
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels(buckets)
+    ax.set_xlabel("Confidence bucket")
+    ax.set_ylabel("DIoU")
+    ax.set_title(title)
+    ax.grid(axis="y", linestyle="--", alpha=0.3)
 
-    axes[0].set_ylabel("Accuracy")
-    fig.suptitle(title)
-    handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=len(agents))
-    fig.tight_layout(rect=(0, 0.07, 1, 1))
+    handles, labels = ax.get_legend_handles_labels()
+    if handles:
+        fig.legend(handles, labels, loc="lower center", ncol=len(agents))
+        fig.tight_layout(rect=(0, 0.08, 1, 1))
+    else:
+        fig.tight_layout()
     fig.savefig(output_path, dpi=200)
     plt.close(fig)
 
@@ -453,6 +453,92 @@ def plot_focal_diou_breakdown(
     plt.close(fig)
 
 
+def plot_diou_stratified(
+    rows: List[dict],
+    agents: List[str],
+    buckets: List[str],
+    bucket_extractor,
+    label_map: Dict[str, str],
+    title: str,
+    xlabel: str,
+    output_path: str,
+) -> None:
+    bucket_values: Dict[str, Dict[str, List[float]]] = {
+        bucket: {agent: [] for agent in agents} for bucket in buckets
+    }
+
+    for row in rows:
+        agent = row.get("agent")
+        if agent not in agents:
+            continue
+        value = row.get("diou")
+        if value is None:
+            continue
+        extracted = bucket_extractor(row)
+        if not extracted:
+            continue
+        if isinstance(extracted, (str, bool)):
+            extracted = [extracted]
+        for bucket in extracted:
+            if bucket in bucket_values:
+                bucket_values[bucket][agent].append(value)
+
+    active_buckets = [
+        bucket
+        for bucket in buckets
+        if any(bucket_values[bucket][agent] for agent in agents)
+    ]
+    if not active_buckets:
+        return
+
+    bar_width = 0.12 if len(agents) > 4 else 0.18
+    x_positions = list(range(len(active_buckets)))
+    fig_width = max(10, len(active_buckets) * 2.5)
+    fig, ax = plt.subplots(figsize=(fig_width, 5.2))
+    cmap = plt.get_cmap("tab10")
+
+    for idx, agent in enumerate(agents):
+        offsets = [
+            x - bar_width * (len(agents) - 1) / 2 + idx * bar_width
+            for x in x_positions
+        ]
+        values = []
+        for bucket in active_buckets:
+            entries = bucket_values[bucket][agent]
+            values.append(sum(entries) / len(entries) if entries else math.nan)
+        ax.bar(
+            offsets,
+            values,
+            bar_width,
+            label=display_agent(agent),
+            color=cmap(idx % 10),
+            alpha=0.6,
+        )
+
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels([label_map.get(bucket, bucket) for bucket in active_buckets])
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel("DIoU")
+    ax.set_title(title)
+    ax.set_ylim(bottom=0)
+    ax.grid(axis="y", linestyle="--", alpha=0.3)
+
+    handles, labels = ax.get_legend_handles_labels()
+    if handles:
+        fig.legend(
+            handles,
+            labels,
+            loc="lower center",
+            bbox_to_anchor=(0.5, 0.05),
+            ncol=min(3, len(handles)),
+        )
+        fig.tight_layout(rect=(0, 0.28, 1, 1))
+    else:
+        fig.tight_layout()
+    fig.savefig(output_path, dpi=200)
+    plt.close(fig)
+
+
 def main() -> None:
     args = parse_args()
     benchmark_dir = os.path.abspath(args.benchmark_dir)
@@ -468,18 +554,18 @@ def main() -> None:
         file=sys.stderr,
     )
 
-    overall_metrics = compute_means(rows, ("iou", "diou"), agents)
+    overall_metrics = compute_means(rows, ("diou",), agents)
     plot_grouped_metrics(
         overall_metrics,
-        "Average IoU and DIoU by agent",
-        "Score",
+        "Average DIoU by agent",
+        "DIoU score",
         os.path.join(output_dir, "overall_performance.png"),
     )
 
     task_type_metrics = grouped_means(
         rows,
         lambda row: row["task_types"],
-        ("iou", "diou"),
+        ("diou",),
         agents,
     )
     for task_type, metrics in task_type_metrics.items():
@@ -499,10 +585,21 @@ def main() -> None:
             ),
         )
 
+    plot_diou_stratified(
+        rows,
+        agents,
+        ["cua", "general", "tiny"],
+        lambda row: row.get("task_types") or [],
+        {"cua": "CUA", "general": "General", "tiny": "Tiny"},
+        "DIoU by task category",
+        "Task category",
+        os.path.join(output_dir, "diou_by_task_category.png"),
+    )
+
     relational_metrics = grouped_means(
         rows,
         lambda row: [row["is_relational"]] if row["is_relational"] is not None else [],
-        ("iou", "diou"),
+        ("diou",),
         agents,
     )
     for relational_flag, metrics in relational_metrics.items():
@@ -522,7 +619,7 @@ def main() -> None:
     resolution_metrics = grouped_means(
         rows,
         lambda row: [row["resolution_bucket"]] if row["resolution_bucket"] else [],
-        ("iou", "diou"),
+        ("diou",),
         agents,
     )
     for resolution_bucket, metrics in resolution_metrics.items():
@@ -535,6 +632,17 @@ def main() -> None:
                 f"performance_resolution_{slugify(resolution_bucket)}.png",
             ),
         )
+
+    plot_diou_stratified(
+        rows,
+        agents,
+        ["standard", "medium", "high"],
+        lambda row: [row.get("resolution_bucket")] if row.get("resolution_bucket") else [],
+        {"standard": "Standard", "medium": "Medium", "high": "High"},
+        "DIoU by image resolution",
+        "Resolution",
+        os.path.join(output_dir, "diou_by_resolution.png"),
+    )
 
     time_metrics = compute_means(rows, ("total_time",), agents)
     plot_time_to_completion(
@@ -562,7 +670,7 @@ def main() -> None:
         confidence_rows = [
             row
             for row in zoom_rows
-            if row.get("confidence_bucket") and row.get("iou") is not None
+            if row.get("confidence_bucket") and row.get("diou") is not None
         ]
         if confidence_rows:
             bucket_order = [
@@ -571,8 +679,8 @@ def main() -> None:
                 "80-90%",
                 "90-100%",
             ]
-            bucket_values: Dict[str, Dict[str, Dict[str, List[float]]]] = {
-                bucket: {agent: {"iou": [], "diou": []} for agent in zoom_agents}
+            bucket_values: Dict[str, Dict[str, List[float]]] = {
+                bucket: {agent: [] for agent in zoom_agents}
                 for bucket in bucket_order
             }
             for row in confidence_rows:
@@ -580,26 +688,21 @@ def main() -> None:
                 agent = row["agent"]
                 if bucket not in bucket_values or agent not in bucket_values[bucket]:
                     continue
-                for metric in ("iou", "diou"):
-                    value = row.get(metric)
-                    if value is not None:
-                        bucket_values[bucket][agent][metric].append(value)
+                value = row.get("diou")
+                if value is not None:
+                    bucket_values[bucket][agent].append(value)
 
             confidence_metrics: Dict[str, Dict[str, Dict[str, Optional[float]]]] = {}
             for bucket in bucket_order:
                 agent_metrics: Dict[str, Dict[str, Optional[float]]] = {}
                 for agent in zoom_agents:
-                    metric_avgs = {}
-                    for metric in ("iou", "diou"):
-                        values = bucket_values[bucket][agent][metric]
-                        metric_avgs[metric] = (
-                            sum(values) / len(values) if values else None
-                        )
-                    agent_metrics[agent] = metric_avgs
+                    values = bucket_values[bucket][agent]
+                    agent_metrics[agent] = {
+                        "diou": sum(values) / len(values) if values else None
+                    }
                 if any(
-                    metric_avgs[metric] is not None
-                    for metric_avgs in agent_metrics.values()
-                    for metric in ("iou", "diou")
+                    metrics.get("diou") is not None
+                    for metrics in agent_metrics.values()
                 ):
                     confidence_metrics[bucket] = agent_metrics
 

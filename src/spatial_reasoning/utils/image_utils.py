@@ -130,7 +130,7 @@ def calculate_iou(
     return intersection / union
 
 
-def calculate_modified_diou(bbox1, bbox2, alpha: float = 0.3, beta: float = 0.5, use_sigmoid: bool = True):
+def calculate_modified_diou(bbox1, bbox2, alpha: float = 2.0, beta: float = 0.5, use_sigmoid: bool = True):
     """
     Modified Distance-IoU (DIoU) metric. Inspired from https://arxiv.org/pdf/1911.08287.
     Raw score = 1 - IoU + center_distance_penalty
