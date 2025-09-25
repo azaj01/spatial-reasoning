@@ -31,8 +31,8 @@ Execute the benchmark script to evaluate different agents on your dataset:
 ```bash
 python -m spatial_reasoning.evaluation.benchmark \
   --agents gemini openai_vanilla_reasoning xai_vanilla_reasoning openai_advanced_reasoning xai_advanced_reasoning \
-  --data /home/qasim/data/reasoning/Advex/SR/parsed_dataset.json \
-  --save-location /tmp/sr-benchmark \
+  --data data/benchmark_data.json \
+  --save-location /tmp/benchmark \
   --num-workers 300
 ```
 
@@ -52,7 +52,7 @@ python -m spatial_reasoning.evaluation.benchmark \
 After the benchmark completes, generate visualization plots:
 
 ```bash
-python evaluation/analysis.py /tmp/sr-benchmark --output-dir /tmp/sr-benchmark/plots
+python evaluation/analysis.py /tmp/benchmark --output-dir /tmp/benchmark/plots
 ```
 
 **Parameters:**
