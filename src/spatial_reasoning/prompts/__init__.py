@@ -4,12 +4,14 @@ from .detection_prompts import (
     GeminiPrompt,
     GridCellDetectionPrompt,
     SimpleDetectionPrompt,
+    SimpleDetectionPromptNormalized,
     SimplifiedGridCellDetectionPrompt,
 )
 
 __all__ = [
     "BasePrompt",
     "SimpleDetectionPrompt",
+    "SimpleDetectionPromptNormalized",
     "GridCellDetectionPrompt",
     "SimplifiedGridCellDetectionPrompt",
     "GeminiPrompt",

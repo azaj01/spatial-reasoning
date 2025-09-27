@@ -66,6 +66,85 @@ Provide your analysis and then output the results in JSON format:
         }
 
 
+class SimpleDetectionPromptNormalized(BasePrompt):
+    """Prompt template for simple object detection tasks with normalized coordinates (0-100)."""
+
+    def __init__(self):
+        super().__init__(
+            name="simple_object_detection_normalized",
+            description="Simple CoT prompt for bounding box detection with normalized coordinates",
+        )
+
+    def get_system_prompt(self, **kwargs) -> str:
+        """Get the system prompt for object detection with normalized coordinates."""
+        return """You are a world-class visual-reasoning researcher charged with object detection tasks. You have spent two decades dissecting image, concept, and bounding-box relationships and constructing rigorous decision trees to solve object detection problems.
+
+Your role is to determine bounding box coordinates for objects in images using NORMALIZED COORDINATES.
+
+**IMPORTANT: Coordinate System**
+- ALL coordinates must be normalized to a 0-100 scale
+- x=0 represents the left edge, x=100 represents the right edge
+- y=0 represents the top edge, y=100 represents the bottom edge
+- Width and height are also expressed as percentages (0-100)
+- For example, a box covering the entire image would be (0, 0, 100, 100)
+- A box in the center covering 50% of the image would be (25, 25, 50, 50)
+
+**Confidence Rubric:**
+- **90-100%** - unmistakable match, zero conflicting cues. Tight bounding box, meaning there is very little background.
+- **80-90%** - strong evidence, minor ambiguity in coordinates or the object of interest. Loose bounding box, meaning there is a lot of background present.
+- **70-80%** - clear best choice but partial occlusion
+- **60-70%** - substantial ambiguity; limited cues
+- **< 60%** - highly uncertain or contradictory evidence
+
+**Analysis Process:**
+Before providing your final answer, conduct a thorough analysis where you:
+- Break down your understanding of the task
+- Justify how you chose the coordinates for each object
+- Verify any inconsistencies in your decision-making
+- Consider potential ambiguities or edge cases
+- Ensure all coordinates are properly normalized to 0-100 range
+
+**Output Format:**
+
+Provide reasoning under <thinking>...</thinking>.
+
+Along with your reasoning, provide your final answer as a JSON object with the following structure:
+{
+  "confidence": [score1, score2, ...],
+  "bbox": [(x1, y1, w1, h1), (x2, y2, w2, h2), ...]
+}
+
+Where x, y, width, and height are ALL NORMALIZED values between 0 and 100.
+
+If multiple instances of the target object exist, provide coordinates for all detected instances.
+"""
+
+    def get_user_prompt(self, **kwargs) -> str:
+        """Get the user prompt for object detection with normalized coordinates."""
+        return f"""Please identify the bounding box coordinates for {kwargs["object_of_interest"]} in this image.
+Image resolution: {kwargs["resolution"]}
+
+IMPORTANT: Provide ALL coordinates as normalized values between 0 and 100.
+- x=0 is left edge, x=100 is right edge
+- y=0 is top edge, y=100 is bottom edge
+- Width and height are also percentages (0-100)
+
+Provide your analysis and then output the results in JSON format:
+{{
+  "confidence": [score1, score2, ...],
+  "bbox": [(x1, y1, w1, h1), (x2, y2, w2, h2), ...]
+}}
+
+All bbox values must be normalized to 0-100 range."""
+
+    def get_required_parameters(self) -> Dict[str, str]:
+        """Get required parameters for this prompt."""
+        return {
+            "image": "PIL image to analyze",
+            "object of interest": "object to detect in the image",
+        }
+
+
 class SimplifiedGridCellDetectionPrompt(BasePrompt):
     """Simplified prompt for detecting all cells containing the target object."""
 

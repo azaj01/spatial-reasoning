@@ -36,6 +36,16 @@ python -m spatial_reasoning.evaluation.benchmark \
   --num-workers 300
 ```
 
+### Impact of normalization:
+
+```bash
+python -m spatial_reasoning.evaluation.benchmark_normalized \
+  --agents openai_vanilla_reasoning xai_vanilla_reasoning \
+  --data data/benchmark_data.json \
+  --save-location ./output
+```
+
+
 **Parameters:**
 - `--agents`: List of agents to evaluate (space-separated). Add as many as you'd like to evaluate.
   - `gemini`: Google's Gemini model
@@ -67,6 +77,6 @@ After running both steps, you'll find:
 
 ## Tips
 
-- Adjust `--num-workers` based on your system capabilities and API rate limits (general rule of thumb is 5-10x your number of CPU cores. On an H100, I tried with 200 workers and completed running the benchmark in 5 minutes, that's 252-1008 requests in 300 seconds).
+- Adjust `--num-workers` based on your system capabilities and API rate limits (general rule of thumb is 5-10x your number of CPU cores. On an H100, I tried with 200 workers and completed running the benchmark in 5 images, that's 252-1008 requests in 300 seconds). Note: xAI has strong rate limiters of 400 RPM, so if the system appears to glitch, it's most likely a rate limited. Can be alleviated by reducing the number of workers.
 - Ensure you have sufficient API credits for all the agents you're testing
 - The benchmark may take some time depending on dataset size and number of agents
