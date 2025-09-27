@@ -1,0 +1,68 @@
+[
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5bf443d9-fc4f-45dd-97e2-cabf68e8aa40.png",
+    "metadata": {
+      "prompt": "detect the dimmest lamp on the left side of the image. A dim lamp is one with little to no glare",
+      "task_type": [
+        "general"
+      ],
+      "is_relational": true,
+      "resolution": [
+        1616,
+        1600
+      ]
+    },
+    "annotations": [
+      [
+        562.46,
+        640.83,
+        60.719999999999914,
+        253.57999999999993
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/ea8ce4fc-983f-409b-b002-258b915193cb.jpeg",
+    "metadata": {
+      "prompt": "detect for the Seattle building logo in this image",
+      "task_type": [
+        "general"
+      ],
+      "is_relational": false,
+      "resolution": [
+        1536,
+        2048
+      ]
+    },
+    "annotations": [
+      [
+        914.53,
+        1343.37,
+        16.600000000000023,
+        61.42000000000007
+      ]
+    ]
+  },
+  {
+    "image_url": "https://segmentsai-prod.s3.eu-west-2.amazonaws.com/assets/QasimWani/5a7f78e9-2bf8-4da8-bc38-bfadd8d12c47.webp",
+    "metadata": {
+      "prompt": "rainbow stained splotch looking defect",
+      "task_type": [
+        "general"
+      ],
+      "is_relational": false,
+      "resolution": [
+        640,
+        640
+      ]
+    },
+    "annotations": [
+      [
+        386.07,
+        425.62,
+        72.86000000000001,
+        62.860000000000014
+      ]
+    ]
+  }
+]
