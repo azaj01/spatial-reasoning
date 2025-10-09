@@ -42,7 +42,7 @@ python -m spatial_reasoning.evaluation.benchmark \
 python -m spatial_reasoning.evaluation.benchmark_normalized \
   --agents openai_vanilla_reasoning xai_vanilla_reasoning \
   --data data/benchmark_data.json \
-  --save-location ./output
+  --save-location ./output \
   --num-workers 64
 ```
 
