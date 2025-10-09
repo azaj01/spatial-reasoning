@@ -33,7 +33,7 @@ python -m spatial_reasoning.evaluation.benchmark \
   --agents gemini openai_vanilla_reasoning xai_vanilla_reasoning openai_advanced_reasoning xai_advanced_reasoning \
   --data data/benchmark_data.json \
   --save-location /tmp/benchmark \
-  --num-workers 300
+  --num-workers 200
 ```
 
 ### Impact of normalization:
@@ -43,6 +43,7 @@ python -m spatial_reasoning.evaluation.benchmark_normalized \
   --agents openai_vanilla_reasoning xai_vanilla_reasoning \
   --data data/benchmark_data.json \
   --save-location ./output
+  --num-workers 64
 ```
 
 

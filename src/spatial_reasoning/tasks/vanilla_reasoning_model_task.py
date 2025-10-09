@@ -4,7 +4,7 @@ from PIL import Image
 
 from ..agents import BaseAgent
 from ..data import Cell
-from ..prompts import BboxDetectionWithGridCellPrompt, SimpleDetectionPrompt
+from ..prompts import BboxDetectionWithGridCellPrompt, SimpleDetectionPrompt, SimpleDetectionPromptNormalized
 from ..utils.io_utils import parse_detection_output
 from .base_task import BaseTask
 
@@ -39,8 +39,15 @@ class VanillaReasoningModelTask(BaseTask):
         multiple_predictions: bool = kwargs.get("multiple_predictions", False)
         resolution = kwargs.get("resolution", image.size)  # BBOX Prompt
         grid_size = kwargs.get("grid_size", (4, 3))  # BBOX Prompt only
+        is_normalized_coordinates = kwargs.get("is_normalized_coordinates", False)
 
-        if isinstance(self.prompt, BboxDetectionWithGridCellPrompt):
+        # Select the appropriate prompt based on normalization flag
+        prompt_to_use = self.prompt
+        if is_normalized_coordinates and isinstance(self.prompt, SimpleDetectionPrompt):
+            # Use the normalized version for vanilla prompts
+            prompt_to_use = SimpleDetectionPromptNormalized()
+
+        if isinstance(prompt_to_use, BboxDetectionWithGridCellPrompt):
             image, cell_lookup = BaseTask.overlay_grid_on_image(
                 image, grid_size[0], grid_size[1]
             )
@@ -58,10 +65,10 @@ class VanillaReasoningModelTask(BaseTask):
 
         messages = [
             self.agent.create_text_message(
-                "system", self.prompt.get_system_prompt(**prompt_kwargs)
+                "system", prompt_to_use.get_system_prompt(**prompt_kwargs)
             ),
             self.agent.create_multimodal_message(
-                "user", self.prompt.get_user_prompt(**prompt_kwargs), [image]
+                "user", prompt_to_use.get_user_prompt(**prompt_kwargs), [image]
             ),
         ]
 
@@ -98,6 +105,14 @@ class VanillaReasoningModelTask(BaseTask):
         for i, bbox in enumerate(structured_response["bbox"]):
             x, y, w, h = bbox
             confidence = structured_response["confidence"][i]
+
+            # Convert from normalized coordinates (0-100) back to pixel coordinates if needed
+            if is_normalized_coordinates and isinstance(prompt_to_use, SimpleDetectionPromptNormalized):
+                # Convert from 0-100 normalized coordinates to actual pixel coordinates
+                x = int(x * resolution[0] / 100)
+                y = int(y * resolution[1] / 100)
+                w = int(w * resolution[0] / 100)
+                h = int(h * resolution[1] / 100)
 
             cell = Cell(id=i, left=x, top=y, right=x + w, bottom=y + h)
             # if (
